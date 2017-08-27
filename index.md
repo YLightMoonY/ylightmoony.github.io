@@ -1,0 +1,7 @@
+---
+layout: home
+
+---
+
+My Index
+
