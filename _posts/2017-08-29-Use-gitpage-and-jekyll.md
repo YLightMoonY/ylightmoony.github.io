@@ -1,3 +1,8 @@
+---
+layout: default
+title: LightMoon's Blog
+---
+
 ## Git Page
 
 1. 建立username.gitpage.io的仓库
