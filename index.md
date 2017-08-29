@@ -5,4 +5,4 @@ title: LightMoon's Blog
 
 My Index
 
-{{site.posts}}
+{{site.pages}}
