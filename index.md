@@ -1,6 +1,6 @@
 ---
 layout: default
-title: [My Title]
+title: LightMoon's Blog
 ---
 
 My Index
