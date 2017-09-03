@@ -1,5 +1,6 @@
 ---
-title: LightMoon's Blog
+title: My gitpage step
+layout: post
 ---
 
 ## Git Page
