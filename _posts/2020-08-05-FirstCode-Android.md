@@ -5,7 +5,7 @@ layout: post
 
 # 第一行代码-Android
 
-
+*仅用于记录需要记忆的知识,一些很简单的常识直接略过*
 
 ## Android启程
 
@@ -86,4 +86,28 @@ layout: post
 
 
 ## Activity （活动）
+
+*与用户交互的界面,绝大部分显示出来的都依托于activity*
+
+### 创建
+
+使用Android Studio的话直接new-> activity -> Empty Activity就可以了(快捷键alt+insert 然后输入activity)
+
+自己创建的话,新建类extends Activity,然后在AndroidManifest.xml中注册:
+
+```XML
+<activity android:name=".chap09.HttpURLConnectionActivity" />
+```
+
+*ps: Android 四大组建都需要在AndroidManifest.xml中注册,否则会报错*
+
+##### 布局
+
+最快速且易用的编辑显示界面的方法
+
+同样用Android Studio可以直接创建,选layout就行.
+
+自己创建: 在res/layout目录中新建xml文件.在Activity的onCreate中调用`setContentView(R.layout.activity_http_u_r_l_connection);`就可以
+
+
 
