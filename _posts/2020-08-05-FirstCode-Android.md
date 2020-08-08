@@ -109,5 +109,64 @@ layout: post
 
 自己创建: 在res/layout目录中新建xml文件.在Activity的onCreate中调用`setContentView(R.layout.activity_http_u_r_l_connection);`就可以
 
+##### 使用菜单（已经不是太常用了）
 
+在`res/menu`中新建xml资源，Activity中重写：
+
+```java
+@Override
+public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.main, menu);
+    return super.onCreateOptionsMenu(menu);
+}
+```
+
+监听menu点击事件重写`public boolean onOptionsItemSelected( MenuItem item) {`
+
+##### 启动制定Activity
+
+显式： `startActivity(new Intent(Context,targetActivity.class));`
+
+隐式：
+
+```java
+Intent intent = new Intent();
+intent.setAction(targetAction);
+// intent.addCategory(targetCategory); // 可选
+startActivity(intent);
+```
+
+*action和category 均是Activity在AndroidManifest中注册时可增加的属性*
+
+##### 一些常用的系统应用打开方式
+
+使用隐式调用可以打开符合Intent的应用界面，下面是一些常用的：
+
+```
+new Intent().setData(Uri.parse("http://www.baidu.com")); // 用默认浏览器打开网页
+new Intent().setData(Uri.parse("tel:10086")); // 拨号
+
+```
+
+Uri 也是配置在AndroidManifest中，属性如下：
+
+> android: scheme。 用于 指定 数据 的 协议 部分， 如上 例 中的 http 部分。 android: host。 用于 指定 数据 的 主机 名 部分， 如上 例 中的 www. baidu. com 部分。 
+>
+> android: port。 用于 指定 数据 的 端口 部分， 一般 紧随 在 主机 名 之后。 android: path。 用于 指定 主 机名 和 端口 之后 的 部分， 如一 段 网址 中 跟在 域名 之后 的 内容。 
+>
+> android: mimeType。 用于 指定 可以 处理 的 数据 类型， 允许 使用 通配符 的 方式 进行 指定。
+
+##### 传递数据：
+
+`new Intent(target).putExtra(,)`目标可以用`getIntent().getxxxx`获取
+
+##### 打开Activity并从中得到返回数据
+
+如调用拍照等，可以在目标Activity拍完后拿到照片路径。
+
+`startActivityForResult(Intent,requestCode)`并且重写`onActivityResult`可以在其中拿到返回的数据
+
+### 生命周期
+
+就是Activity在各个阶段会自动回调的方法。在其中添加我们自己的逻辑以便被调用。
 
