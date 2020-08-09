@@ -170,3 +170,47 @@ Uri 也是配置在AndroidManifest中，属性如下：
 
 就是Activity在各个阶段会自动回调的方法。在其中添加我们自己的逻辑以便被调用。
 
+Android是使用一个不可被应用访问的栈来管理。
+
+##### 一个Activity会有四种状态
+
+1. 运行态 可以被用户操作
+2. 暂停状态 可见不可被操作。比如有弹窗时
+3. 停止状态 完全不可见。这个状态不稳定，完全由系统决定何时被回收
+4. 销毁 彻底被从栈中移除
+
+##### 整个周期会被回调的方法
+
+`onCreate` 被创建时调用，进行初始化操作，绑定布局等
+
+`onStart` 变为可见时触发
+
+`onResume` 可操作时触发
+
+`onPause` 从可操作变为不可操作但可见时触发
+
+`onStop` 不可见时触发
+
+`onDestory` 被销毁时触发
+
+`onRestart` 由停止重新运行时触发
+
+![生命周期](./assets/FirstCode/2_activity_life.png)
+
+
+
+##### 保存临时数据
+
+处于onStop状态可能会被系统回收掉，如果重新返回这个页面，因为被回收会从新走onCreate，为了保存临时数据如EditText中的内容，可以重写`onSaveInstanceState(Bundle)`使用Bundle保存，在onCreate的bundle对象中读取。
+
+##### Activity 启动模式
+
+在AndroidManifest.xml中设置activity的launchMode属性，设置Activity被启动时的行为。
+
+1. standard 默认，每次被打开都是在同一个栈中一个新的Activity
+2. singleTop 当处于栈顶时不会进行任何操作，不处于栈顶打开新实例
+3. singleTask 处于栈顶不会进行任何操作，处于栈中则弹出上面的Activity并显示已经存在的实例
+4. singleTask *每个应用会有自己的栈* 设置了singleTask的Activity会有一个单独的栈，不同应用打开都会是同一个实例
+
+
+
