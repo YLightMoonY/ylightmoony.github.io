@@ -208,9 +208,165 @@ Android是使用一个不可被应用访问的栈来管理。
 在AndroidManifest.xml中设置activity的launchMode属性，设置Activity被启动时的行为。
 
 1. standard 默认，每次被打开都是在同一个栈中一个新的Activity
-2. singleTop 当处于栈顶时不会进行任何操作，不处于栈顶打开新实例
-3. singleTask 处于栈顶不会进行任何操作，处于栈中则弹出上面的Activity并显示已经存在的实例
-4. singleTask *每个应用会有自己的栈* 设置了singleTask的Activity会有一个单独的栈，不同应用打开都会是同一个实例
+2. singleTop 当处于栈顶时不会重新创建，不处于栈顶打开新实例
+3. singleTask 处于栈顶不会重新创建，处于栈中则弹出上面的Activity并显示已经存在的实例
+4. singleTask *每个应用会有自己的栈* 设置了singleTask的Activity会有一个单独的栈。同一个应用打开的是相同的实例。*经验证，不同应用依旧打开不同实例*
+
+
+
+## UI
+
+Android UI由一个个控件组成。*大部分常用的略*
+
+### 自定义控件
+
+`<include>`标签只是引入布局，而使用自定义控件还可以复用事件相应。
+
+如下自定义一个LinearLayout：
+
+```
+public class TitleLayout extends LinearLayout {
+    public TitleLayout(Context context) {
+        this(context,null);
+    }
+
+    public TitleLayout(Context context, AttributeSet attrs) {
+        this(context, attrs,0);
+    }
+
+    public TitleLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        LayoutInflater.from(context).inflate(R.layout.title, this);
+    }
+}
+```
+
+`R.layout.title`指向一个LinearLayout布局文件，引用的时候直接引用这个类替代`<include/>`
+
+###### 需要补充自定义属性如何使用
+
+### 列表
+
+##### ListView
+
+ListView 只是使用的话很简单，引入布局，定义Adapter，但是数据量多的时候会有加载的内容或者事件与对应位置index/position对应不上以及性能较差问题。使用ViewHolder来解决。
+
+###### ViewHolder：
+
+自定义Adapter，重写如下：
+
+```Java
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        Frui fruit = getItem(position);
+        View view;
+        ViewHolder viewHolder;
+        if (convertView == null) {
+            view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
+            viewHolder = new ViewHolder();
+            viewHolder.fruitImage = (ImageView) view.findViewById(R.id.fruit_ image);
+            viewHolder.fruitName = (TextView) view.findViewById(R.id.fruit_ name);
+            view.setTag(viewHolder); // 将 ViewHolder 存储 在 View 中 
+        } else {
+            view = convertView;
+            viewHolder = (ViewHolder) view.getTag(); // 重新 获取 ViewHolder
+
+        } viewHolder.fruitImage.setImageResource(fruit.getImageId());
+        viewHolder.fruitName.setText(fruit.getName());
+        return view;
+    }
+
+    class ViewHolder {
+        ImageView fruitImage;
+        TextView fruitName;
+    }
+```
+
+##### RecyclerView
+
+更推荐使用RecyclerView来代替ListView，可配置性更高，并且默认使用ViewHolder，不用再自己考虑服复用问题。
+
+1. 引入dependencies `androidx.recyclerview:recyclerview`
+
+2. 引入布局
+
+3. 自定义Adapter
+
+   ```Java
+   public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> {
+   
+       private Context mContext;
+       private List<Fruit> mFruitList;
+   
+       public FruitAdapter(List<Fruit> mFruitList) {
+           this.mFruitList = mFruitList;
+       }
+   
+       @NonNull
+       @Override
+       public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+           if (mContext == null) mContext = parent.getContext();
+           View view = LayoutInflater.from(mContext).inflate(R.layout.fruit_item,parent,false);
+           final ViewHolder holder = new ViewHolder(view);
+           holder.cardView.setOnClickListener(new View.OnClickListener() {
+               @Override
+               public void onClick(View v) {
+                   int position = holder.getAdapterPosition();
+                   Fruit fruit = mFruitList.get(position);
+                   Intent intent = new Intent(mContext, FruitActivity.class);
+                   intent.putExtra(FruitActivity.FRUIT_NAME, fruit.getName());
+                   intent.putExtra(FruitActivity.FRUIT_IMAGE_ID, fruit.getImageId());
+                   mContext.startActivity(intent);
+               }
+           });
+           return holder;
+       }
+   
+       @Override
+       public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+           Fruit fruit = mFruitList.get(position);
+           holder.fruitName.setText(fruit.getName());
+           Glide.with(mContext).load(fruit.getImageId()).into(holder.fruitImage);
+       }
+   
+       @Override
+       public int getItemCount() {
+           return mFruitList.size();
+       }
+   
+       public class ViewHolder extends RecyclerView.ViewHolder {
+           CardView cardView;
+           ImageView fruitImage;
+           TextView fruitName;
+           public ViewHolder(@NonNull View itemView) {
+               super(itemView);
+               cardView = (CardView) itemView;
+               fruitImage = cardView.findViewById(R.id.fruit_image);
+               fruitName = cardView.findViewById(R.id.fruit_name);
+   
+           }
+       }
+   }
+   ```
+
+4. 使用
+
+   ```Java
+   RecyclerView recyclerView = findViewById(R.id.recycler_view);
+   GridLayoutManager layoutManager = new GridLayoutManager(this,3);
+   recyclerView.setLayoutManager(layoutManager);
+   adapter = new FruitAdapter(mFruitList);
+   recyclerView.setAdapter(adapter);
+   ```
+
+   LayoutManager 常用有：
+   
+   * LinearLayoutManager 线性布局。类似默认的LinearLayout一条条添加，并且设置oritation可以实现横向列表
+   * GridLayoutManager 网格布局，类似GridLayout
+   * StaggeredGridLayoutManager 流式布局，类似GridLayoutManager只是每个条目高度不是固定的，而是适配条目本身大小。
+
+
 
 
 
