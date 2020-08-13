@@ -370,3 +370,163 @@ ListView 只是使用的话很简单，引入布局，定义Adapter，但是数�
 
 
 
+## 碎片 Fragment
+
+一开始是为了更容易适配平板,不过因为其灵活性,大部分应用都是把UI写在Fragment里面了.
+
+### 使用方式
+
+> (1) 创建待添加的碎片实例。
+> (2) 获取FragmentManager,在活动中可以直接通过调用getSupportFragmentManager()方法
+> 得到。
+> (3) 开启一个事务,通过调用beginTransaction()方法开启。
+> (4) 向容器内添加或替换碎片,一般使用replace()方法实现,需要传入容器的id和待添加
+> 的碎片实例。
+> (5) 提交事务,调用commit()方法来完成。
+
+可以直接在布局中用<fragment android:name="target fragment class"/>
+
+动态更换fragment:
+
+```Java
+private void replaceFragment(Fragment fragment) {
+	FragmentManager fragmentManager = getSupportFragmentManager();
+	FragmentTransaction transaction = fragmentManager.beginTransaction();
+	transaction.replace(R.id.right_layout, fragment);
+	transaction.commit();
+}
+```
+
+*ps: 使用support包使代码适配范围更广,非support版本是从4.x开始的,不过现在影响不大,不过有的库是用的support使用时注意更改即可,其他support api同理*
+
+### 用栈管理
+
+```Java
+private void replaceFragment(Fragment fragment) {
+	FragmentManager fragmentManager = getSupportFragmentManager();
+	FragmentTransaction transaction = fragmentManager.beginTransaction();
+	transaction.replace(R.id.right_layout, fragment);
+	transaction.addToBackStack(null);
+	transaction.commit();
+}
+```
+
+效果就是按back会先回退到上一个Fragment
+
+### Fragment之间通信
+
+```Java
+RightFragment rightFragment = (RightFragment) getSupportFragmentManager()
+.findFragmentById(R.id.right_fragment);
+```
+
+也可以用getActivity()获取Activity,然后用它中介
+
+### 生命周期
+
+1. 运行态 同Activity
+2. 暂停态 同Activity,有弹窗时.
+3. 停止态 
+   * Activity处于停止态时
+   * FragmentTransaction 调用remove,replce之前被addToBackStack,调用之后会停止,此时可能会被回收
+4. 销毁
+   * Activity被销毁
+   * 没有被addToBackStack而被remove,replace
+
+![Fragment 生命周期](./assets/FirstCode/4_fragment_lifecycle.png)
+
+
+
+## Broadcast 广播
+
+不同应用之间通信方式的一种.使用简单,效率一般.当系统中的任务太多,机器性能较差时可能会很晚才接到.
+
+* 标准广播 发出来就不管了,不同应用接到的次序不定
+* 有序广播 根据优先级依次接到,可以在高优先级的应用中拦截
+
+### 接收
+
+* 动态注册
+
+  ```Java
+  intentFilter = new IntentFilter();
+  intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+  networkChangeReceiver = new NetworkChangeReceiver();
+  registerReceiver(networkChangeReceiver, intentFilter);
+  
+  
+  class NetworkChangeReceiver extends BroadcastReceiver {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+      Toast.makeText(context, "network changes", Toast.LENGTH_SHORT).show();
+      }
+  }
+  ```
+
+  regist部分走完之后receiver才能接到
+
+* 静态注册
+
+  ```XML
+  <receiver
+      android:name=".BootCompleteReceiver"
+      android:enabled="true"
+      android:exported="true">
+          <intent-filter>
+          	<action android:name="android.intent.action.BOOT_COMPLETED" />
+          </intent-filter>
+  </receiver>
+  
+  ```
+
+  然后类`extends BroadcastReceiver`即可.这样只要应用安装后启动过一次,就一直都能接到广播
+
+  *ps1: 因为广播滥用,很多ODM长都对第三方应用广播进行了限制,这个可能接不到就不在这里讨论了*
+
+  *ps2: 大部分时候是需要接收系统广播的,很多都需要相应权限,这个注意*
+
+### 发送
+
+* 标准广播`sendBroadcast(Context,Intent(TargetAction))`
+
+* 有序广播`sendOrderedBroadcast()` receiver注册时增加`<intent-filter android:priority="100">`就可以决定接收顺序了,然后onReceive里面调用abortBroadcast可以中断广播不让后面的接收器接到
+
+
+
+### 本地广播
+
+仅本应用内部可以接发,其他应用接不到的广播.比全局广播效率要高一些,不过因为还是异步,尽量少用.
+
+相较于全局广播,只是使用时调用下LocalBroadcastManager
+
+```Java
+// 获取manager
+localBroadcastManager = LocalBroadcastManager.getInstance(Context); 
+// 发送
+localBroadcastManager.sendBroadcast(intent);
+// 注册receiver
+localBroadcastManager.registerReceiver(localReceiver, intentFilter);
+```
+
+**本地广播接收器无法静态注册**
+
+
+
+## 持久化 数据存储
+
+主要是文件存储,SharedPreference和数据库.
+
+### 文件存储
+
+可以储存简单的文本,二进制数据或者大文件.
+
+通过Context.openFileOutput("name",MODE)来写入,获取文件流然后用Java的文件访问方式处理,Mode分为MODE_PRIVATE(默认方式,写入会覆盖源文件)和MODE_APPEND(如果源文件存在则会在后面追加)
+
+通过Context.openFileInput("name")来读取
+
+文件会默认保存在`/data/data/包名/files`中
+
+### SharedPreference
+
+主要用来存储配置信息,设置项等.
+
