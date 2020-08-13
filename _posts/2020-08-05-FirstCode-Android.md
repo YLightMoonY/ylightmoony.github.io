@@ -530,3 +530,160 @@ localBroadcastManager.registerReceiver(localReceiver, intentFilter);
 
 主要用来存储配置信息,设置项等.
 
+首先要获取SharedPreference对象:
+
+1. `Context.getSharedPreference(name,mode)`新版本mode只能天MODE_PRIVATE了,文件会保存在`/data/data/packageName/shared_prefs`中
+2. `Activity.getPreferences()`同Context
+3. `PreferenceManager.getDefaultSharedPreference` 原版已经不再支持,新版使用androidx中的PreferenceManager
+
+调用SharedPreference.edit() 获得Editor对象,调用Editor.putxxx()输入数据,Editor.apply将数据保存.SharedPreference.getXXX获取数据
+
+*设置页面可以直接使用Preference相关API TODO:后续补充*
+
+### SQLite数据库
+
+SQLite是一个轻量级关系型数据库.速度快,占用低,还遵循ACID事务,符合移动端需求.
+
+>  ACID: 指数据库事务正确执行的四个基本要素的缩写。包含：原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）、持久性（Durability）
+
+
+
+##### 创建
+
+使用`SQLiteOpenHelper`创建数据库.
+
+```Java
+public class MyDatabaseHelper extends SQLiteOpenHelper {
+    public static final String SQL_CREATE_BOOK = "create table book(" +
+            "id integer primary key autoincrement," +
+            "author text," +
+            "price real," +
+            "pages integer," +
+            "name text)";
+    public static final String SQL_CREATE_CATEGORY = "create table Category (" +
+            "id integer primary key autoincrement," +
+            "category_name text," +
+            "category_code integer)";
+    private final Context mContext;
+
+    public MyDatabaseHelper(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, "BookStore.db", null, 1);
+        mContext = context;
+    }
+
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(SQL_CREATE_BOOK);
+        db.execSQL(SQL_CREATE_CATEGORY);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("drop table if exists Book");
+        db.execSQL("drop table if exists Category");
+        onCreate(db);
+    }
+}
+```
+
+会根据new时传入的version决定是否执行upgrade
+
+> SQLite数据类型很简单,integer表示
+> 整型,real表示浮点型,text表示文本类型,blob表示二进制类型。另外,上述建表语句
+> 中我们还使用了primary key将id列设为主键,并用autoincrement关键字表示id列是自增
+> 长的。
+
+#### CRUD
+
+数据库主要操作增删改查.Android均提供了默认API来支持,也支持直接执行SQL语句,所以均写两个版本的例子.
+
+不过默认API除了不用估计SQL功底之外,还能使用批量操作提高性能.
+
+##### Create - 增加
+
+```Java
+// Android API Version
+SQLiteDatabase db = helper.getWritableDatabase();
+ContentValues values = new ContentValues();
+values.put("name","The Da Vinci Code");
+values.put("author","Dan Drown");
+values.put("pages",454);
+values.put("price",16.13);
+db.insert("Book", null, values);
+values.clear();
+values.put("name", "The Lost Symbo");
+values.put("author","Dan Brown");
+values.put("pages",510);
+values.put("price",19.45);
+db.insert("Book", null, values);
+
+/// --> use sql version
+db.execSQL("insert into Book(name,author,pages,price) values(?,?,?,?)"
+           ,new String[]{"The Da Vinci Code 2","Dan Drown","454","16.13"});
+db.close();
+```
+
+Research - 查找
+
+查找是借助Cursor来遍历结果的
+
+```Java
+                SQLiteDatabase db = helper.getWritableDatabase();
+                Cursor cursor = db.query("Book", null, null, null, null, null, null);
+                // use sql version -->
+                Cursor cursor1 = db.rawQuery("select * from Book",null);
+                if (cursor.moveToFirst()) {
+                    do {
+                        String name = cursor.getString(cursor.getColumnIndex("name"));
+                        String author = cursor.getString(cursor.getColumnIndex("author"));
+                        int pages = cursor.getInt(cursor.getColumnIndex("pages"));
+                        double price = cursor.getDouble(cursor.getColumnIndex("price"));
+                        Log.d(TAG, "onClick: " + name + "," + author + "," + pages + "," + price);
+                    } while (cursor.moveToNext());
+                }
+                cursor.close();
+                db.close();
+```
+
+
+
+Update - 更新
+
+```Java
+                SQLiteDatabase db = helper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put("price",10.99);
+                db.update("Book",values,"name=?",new String[]{
+                        "The Da Vinci Code"
+                });
+                /// use sql version -->
+                db.execSQL("update Book set price=? where name=?"
+                    ,new String[]{"10.99","The Da Vinci Code"});
+                db.close();
+```
+
+Delete - 删除
+
+```Java
+                SQLiteDatabase db = helper.getWritableDatabase();
+                db.delete("Book","pages > ?",new String[]{
+                        "500"
+                });
+                /// use sql version -->
+                db.execSQL("delete from Book where pages>?",new String[]{
+                        "500"
+                });
+                db.close();
+```
+
+#### 使用LitePal
+
+一款开源的ORM(对象关系映射)框架,极大的简化了数据库操作,建议使用并且阅读源码
+
+> [https://github.com/guolindev/LitePal](https://github.com/guolindev/LitePal)
+
+
+
+## ContentProvider 跨进程共享数据
+
