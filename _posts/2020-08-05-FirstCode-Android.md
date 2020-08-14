@@ -687,3 +687,203 @@ Delete - 删除
 
 ## ContentProvider 跨进程共享数据
 
+在不同的应用间共享数据.
+
+### 运行时权限
+
+部分权限除了在AndroidManifest中申请以外,每次使用到都需要动态判断和申请.否则直接报错.
+
+```Java
+if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.
+    permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(MainActivity.this, new
+        	String[]{ Manifest.permission.CALL_PHONE }, 1);
+}
+
+...
+@Override
+public void onRequestPermissionsResult(int requestCode, String[] permissions,
+    int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.
+                    PERMISSION_GRANTED) {
+                    call();
+                } else {
+                    Toast.makeText(this, "You denied the permission", Toast.LENGTH_
+                    	SHORT).show();
+                }
+            	break;
+            default:
+        }
+}
+```
+
+### ContentResolver
+
+访问其他应用的provider操作类似于数据库,也都是CRUD,只不过不再使用表名而是使用URI替代,然后由目标APP对URI处理.
+
+```Java
+	public void addBook(View view) {
+        Uri uri = Uri.parse("content://com.lmoon.fileapp.provider/book");
+        ContentValues values = new ContentValues();
+        values.put("name","A Clash of Kings");
+        values.put("author", "George Martin");
+        values.put("pages",1030);
+        values.put("price",22.64);
+        Uri newUri = getContentResolver().insert(uri, values);
+        newId = newUri.getPathSegments().get(1);
+    }
+
+    public void queryBook(View view) {
+        Uri uri = Uri.parse("content://com.lmoon.fileapp.provider/book");
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null) {
+            StringBuilder builder = new StringBuilder();
+            while (cursor.moveToNext()) {
+                builder.append(cursor.getString(cursor.getColumnIndex("name")));
+            }
+            Toast.makeText(this, builder.toString(), Toast.LENGTH_SHORT).show();
+            cursor.close();
+        } else {
+            Toast.makeText(this, "No book", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void updateBook(View view) {
+        Uri uri = Uri.parse("content://com.lmoon.fileapp.provider/book/" + newId);
+        ContentValues values = new ContentValues();
+        values.put("name","A storm of Swords");
+        values.put("pages",1216);
+        values.put("price",24.15);
+        int updatedRows = getContentResolver().update(uri, values, null, null);
+        Toast.makeText(this, "Updated books: " + updatedRows, Toast.LENGTH_SHORT).show();
+    }
+
+    public void deleteBook(View view) {
+        Uri uri = Uri.parse("content://com.lmoon.fileapp.provider/book");
+        int deletedBooks = getContentResolver().delete(uri, null, null);
+        Toast.makeText(this, "Deleted Books: " + deletedBooks, Toast.LENGTH_SHORT).show();
+    }
+```
+
+联系人例子:
+
+```Java
+private void readContacts() {
+Cursor cursor = null;
+try {
+// 查询联系人数据
+cursor = getContentResolver().query(ContactsContract.CommonDataKinds.
+Phone.CONTENT_URI, null, null, null, null);
+if (cursor != null) {
+while (cursor.moveToNext()) {
+// 获取联系人姓名
+String displayName = cursor.getString(cursor.getColumnIndex
+(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+// 获取联系人手机号
+String number = cursor.getString(cursor.getColumnIndex
+(ContactsContract.CommonDataKinds.Phone.NUMBER));
+contactsList.add(displayName + "\n" + number);
+}
+adapter.notifyDataSetChanged();
+}
+} catch (Exception e) {
+e.printStackTrace();
+} finally {
+if (cursor != null) {
+cursor.close();
+}
+}
+}
+```
+
+### ContentProvider
+
+```Java
+
+public class MyProvider extends ContentProvider {
+
+    public static final int TABLE1_DIR = 0;
+    public static final int TABLE1_ITEM = 1;
+    public static final int TABLE2_DIR = 2;
+    public static final int TABLE2_ITEM = 3;
+    public static final UriMatcher uriMatcher;
+    static {
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI("com.lmoon.providerapp.provider","table1",TABLE1_DIR);
+        uriMatcher.addURI("com.lmoon.providerapp.provider","table1/#",TABLE1_ITEM);
+        uriMatcher.addURI("com.lmoon.providerapp.provider","table2",TABLE2_DIR);
+        uriMatcher.addURI("com.lmoon.providerapp.provider","table2/#",TABLE2_ITEM);
+    }
+    @Override
+    public boolean onCreate() {
+        return false;
+    }
+
+    @Nullable
+    @Override
+    public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+        switch (uriMatcher.match(uri)) {
+            case TABLE1_DIR:
+                break;
+            case TABLE1_ITEM:
+                break;
+            case TABLE2_DIR:
+                break;
+            case TABLE2_ITEM:
+                break;
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public String getType(@NonNull Uri uri) {
+        switch (uriMatcher.match(uri)) {
+            case TABLE1_DIR:
+                return "vnd.android.cursor.dir/vnd.com.lmoon.providerapp.provider.table1";
+            case TABLE1_ITEM:
+                return "vnd.android.cursor.item/vnd.com.lmoon.providerapp.provider.table1";
+            case TABLE2_DIR:
+                return "vnd.android.cursor.dir/vnd.com.lmoon.providerapp.provider.table2";
+            case TABLE2_ITEM:
+                return "vnd.android.cursor.item/vnd.com.lmoon.providerapp.provider.table2";
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
+        return null;
+    }
+
+    @Override
+    public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
+        return 0;
+    }
+
+    @Override
+    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
+        return 0;
+    }
+}
+```
+
+URI 主要两种方式:
+
+`content://com.example.app.provider/table1`
+
+`content://com.example.app.provider/table1/1` 后面的数字表示操作id
+
+> 可以使用通配符的方式来分别匹配
+> 这两种格式的内容URI,规则如下。
+> *:表示匹配任意长度的任意字符。
+> #:表示匹配任意长度的数字。
+>
+> 所以,一个能够匹配任意表的内容URI格式就可以写成:
+> content://com.example.app.provider/*
+> 而一个能够匹配table1表中任意一行数据的内容URI格式就可以写成:
+> content://com.example.app.provider/table1/#
+
