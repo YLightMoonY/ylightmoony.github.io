@@ -1171,6 +1171,15 @@ protected void onDestroy() {
 
 使用VideoView
 
+```XML
+    <VideoView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/video_view" />
+```
+
+
+
 ```Java
     private void initVideoPath() {
         File file = new File(Environment.getExternalStorageDirectory(), "movie.mp4");
@@ -1208,5 +1217,104 @@ protected void onDestroy() {
 
 
 
+## 网络
 
+可以使用WebView提供简单的网页访问.
+
+```XML
+<WebView
+    android:id="@+id/web_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"/>
+```
+
+注意权限
+
+```XML
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+
+
+### HTTP访问网络
+
+非浏览器应用大部分时候是需要直接发HTTP请求获取服务器信息而不是直接把网页显示出来
+
+因为种种原因,以前简单易用的HttpClient已经被移除了,android api访问的话直接使用HttpUrlConnection.
+
+网络请求花费的时间一般比较长,所以需要放在子线程中使用.
+
+```Java
+    private void sendRequestWithHttpURLConnection() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection connection = null;
+                BufferedReader reader = null;
+                try {
+                    URL url = new URL("https://www.baidu.com");
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setConnectTimeout(8000);
+                    connection.setReadTimeout(8000);
+                    InputStream is = connection.getInputStream();
+                    reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder builder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        Log.i(TAG, "run: " + line);
+                        builder.append(line);
+                    }
+                    showResponse(builder.toString());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+```
+
+如果需要post请求:
+
+```Java
+connection.setRequestMethod("POST");
+DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+out.writeBytes("username=admin&password=123456");
+```
+
+
+
+### OkHttp
+
+网络非常复杂,想要获得优秀的网络体验需要考虑很多东西.
+
+使用[OkHttp](https://github.com/square/okhttp) 这个开源框架可以大幅度削减自己要写的代码.
+
+```
+'com.squareup.okhttp3:okhttp:3.4.1'   // 引用
+```
+
+```Java
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder()
+                            .url("https://www.baidu.com").build();
+                    Response response = null;
+                        response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    showResponse(responseData);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }.start();
+```
+
+### 解析XML
 
