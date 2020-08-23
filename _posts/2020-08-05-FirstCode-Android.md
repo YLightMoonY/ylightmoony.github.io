@@ -913,5 +913,300 @@ URI 主要两种方式:
 
 ### 通知
 
-新版本需要使用Channel来创建通知
+新版本需要使用Channel来创建通知,通过channel会将相同类型的通知合并到多级通知里面,并且使用相同的配置,相同的管理.一个完整的使用channel的通知如下:
+
+```Java
+		NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+        // 通知渠道的id
+        String id = "LearnNotification";
+        // 用户可以看到的通知渠道的名字.
+        CharSequence name = getString(R.string.channel_name);
+        // 用户可以看到的通知渠道的描述
+        String description = getString(R.string.channel_description);
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel mChannel = new NotificationChannel(id, name, importance);
+        // 配置通知渠道的属性
+        mChannel.setDescription(description);
+        // 设置通知出现时的闪灯（如果 android 设备支持的话）
+        mChannel.enableLights(true);
+        mChannel.setLightColor(Color.RED);
+        // 设置通知出现时的震动（如果 android 设备支持的话）
+        mChannel.enableVibration(true);
+        mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+        //最后在notificationmanager中创建该通知渠道
+        //
+        manager.createNotificationChannel(mChannel);
+
+        Notification notification = new NotificationCompat.Builder(this, id)
+                .setContentTitle("Content title")
+//                .setContentText("This is a LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong Text")
+//                .setStyle(new NotificationCompat.BigTextStyle().bigText("This is a LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong Text"))
+                .setStyle(new NotificationCompat.BigPictureStyle().bigPicture(BitmapFactory.decodeResource(getResources(),R.drawable.a1)))
+                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher)).build();
+
+        manager.notify(1,notification);
+```
+
+
+
+### Camera
+
+基本使用方法:
+
+```Java
+				File outputImage = new File(getExternalCacheDir(), "output_image.jpg");
+                try {
+                    if (outputImage.exists()) {
+                        outputImage.delete();
+                    }
+                    outputImage.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (Build.VERSION.SDK_INT >= 24) {
+                    imageUri = FileProvider.getUriForFile(CameraAlbumActivity.this, "com.lmoon.firstcodeapp.fileprovider", outputImage);
+
+                } else {
+                    imageUri = Uri.fromFile(outputImage);
+                }
+
+                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                startActivityForResult(intent, REQUEST_TAKE_PHOTO);
+
+// -----
+@Override
+protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_TAKE_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    try {
+                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        picture.setImageBitmap(bitmap);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+```
+
+android7.0之后访问文件需要使用FileProvider.以便将实际路径隐藏起来
+
+##### FileProvider:
+
+```Java
+Uri imageUri = FileProvider.getUriForFile(CameraAlbumActivity.this, "com.lmoon.firstcodeapp.fileprovider", outputImage);
+```
+
+```XML
+<!-- AndroidManifest.xml -->
+<provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.lmoon.firstcodeapp.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+```
+
+```XML
+<!-- file_paths -->
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-cache-path
+        name="my_images"
+        path="" />
+</paths>
+```
+
+
+
+### 相册中获取图片
+
+首先需要判断EXTERNAL_STORAGE权限.然后依旧是startActivityForResult获取
+
+```Java
+    public void chooseFromAlbum(View view) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+        } else {
+            openAlbum();
+        }
+    }
+    private void openAlbum() {
+        Intent intent = new Intent("android.intent.action.GET_CONTENT");
+        intent.setType("image/*");
+        startActivityForResult(intent,REQUEST_CHOOSE_PHOTO);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch (requestCode) {
+            case REQUEST_CHOOSE_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    handleImage(data);
+                }
+                break;
+        }
+}
+
+    private void handleImage(Intent data) {
+        String imagePath = null;
+        Uri uri = data.getData();
+        if (DocumentsContract.isDocumentUri(this, uri)) {
+            String docId = DocumentsContract.getDocumentId(uri);
+            if ("com.android.providers.media.documents".equals(uri.getAuthority())) {
+                String id = docId.split(":")[1];
+                String selection = MediaStore.Images.Media._ID + "=" + id;
+                imagePath = getImagePath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection);
+            } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
+                Uri conentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(docId));
+                imagePath = getImagePath(conentUri, null);
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            imagePath = getImagePath(uri, null);
+        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            imagePath = uri.getPath();
+        }
+        displayImage(imagePath);
+    }
+    private void displayImage(String imagePath) {
+        if (TextUtils.isEmpty(imagePath)) {
+            Toast.makeText(this, "Error path", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.d(TAG, "displayImage: " + imagePath);
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+            picture.setImageBitmap(bitmap);
+        }
+    }
+    private String getImagePath(Uri externalContentUri, String selection) {
+        String path = null;
+        Cursor cursor = getContentResolver().query(externalContentUri, null, selection, null, null);
+        if (cursor != null) {
+            if (cursor.moveToNext()) {
+                path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+            }
+            cursor.close();
+        }
+        Log.i(TAG, "getImagePath: " + path);
+        return path;
+    }
+```
+
+*Android Q 新增分区存储,会报错,需要更改AndroidManifest属性*
+
+```XML
+
+<manifest ... >
+    <!-- This attribute is "false" by default on apps targeting Android Q. -->
+    <application android:requestLegacyExternalStorage="true" ... >
+     ...
+    </application>
+</manifest>
+
+```
+
+
+
+### 播放音频
+
+> MediaPlayer的工作流程。首先需要创建出一
+> 个MediaPlayer对象,然后调用setDataSource()方法来设置音频文件的路径,再调
+> 用prepare()方法使MediaPlayer进入到准备状态,接下来调用start()方法就可以开始播放
+> 音频,调用pause()方法就会暂停播放,调用reset()方法就会停止播放。
+
+```Java
+private void initMediaPlayer() {
+    try {
+        File file = new File(Environment.getExternalStorageDirectory(),
+        "music.mp3");
+        mediaPlayer.setDataSource(file.getPath()); // 指定音频文件的路径
+        mediaPlayer.prepare(); // 让MediaPlayer进入到准备状态
+    } catch (Exception e) {
+    	e.printStackTrace();
+    }
+}
+
+@Override
+public void onClick(View v) {
+    switch (v.getId()) {
+        case R.id.play:
+            if (!mediaPlayer.isPlaying()) {
+            	mediaPlayer.start(); // 开始播放
+            }
+        break;
+        case R.id.pause:
+            if (mediaPlayer.isPlaying()) {
+            	mediaPlayer.pause(); // 暂停播放
+            }
+        break;
+        case R.id.stop:
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.reset(); // 停止播放
+                initMediaPlayer();
+            }
+        break;
+        default:
+        break;
+    }
+}
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    if (mediaPlayer != null) {
+        mediaPlayer.stop();
+        mediaPlayer.release();
+    }
+}
+```
+
+### 播放视频
+
+使用VideoView
+
+```Java
+    private void initVideoPath() {
+        File file = new File(Environment.getExternalStorageDirectory(), "movie.mp4");
+        Log.i(TAG, "initVideoPath: " + file.getPath());
+        mVideoView.setVideoPath(file.getPath());
+    }
+    public void play(View view) {
+        if (!mVideoView.isPlaying()) {
+            mVideoView.start();
+        }
+    }
+
+    public void pause(View view) {
+        if (mVideoView.isPlaying()) {
+            mVideoView.pause();
+        }
+    }
+
+    public void replay(View view) {
+        if (mVideoView.isPlaying()) {
+            mVideoView.resume();
+        } else {
+            mVideoView.pause();
+            mVideoView.resume();
+        }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mVideoView != null) {
+            mVideoView.suspend();
+        }
+    }
+```
+
+
+
+
 
