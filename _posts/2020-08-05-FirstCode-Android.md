@@ -818,18 +818,27 @@ public class MyProvider extends ContentProvider {
     }
     @Override
     public boolean onCreate() {
+        // 。通常会在这里完成对数据库的创建和升级等操作,返回true表示内容提供器初始化成功,返回false则表示失败。
         return false;
     }
 
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
         switch (uriMatcher.match(uri)) {
             case TABLE1_DIR:
+                cursor = db.query("Book", projection, selection, selectionArgs, null,
+null, sortOrder);
                 break;
             case TABLE1_ITEM:
+                String bookId = uri.getPathSegments().get(1);
+cursor = db.query("Book", projection, "id = ?", new String[] { bookId },
+null, null, sortOrder);
                 break;
             case TABLE2_DIR:
+                cursor = db.query("Category", projection, selection, selectionArgs,
+null, null, sortOrder);
                 break;
             case TABLE2_ITEM:
                 break;
@@ -840,6 +849,7 @@ public class MyProvider extends ContentProvider {
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
+        // 根据传入的内容URI来返回相应的MIME类型。
         switch (uriMatcher.match(uri)) {
             case TABLE1_DIR:
                 return "vnd.android.cursor.dir/vnd.com.lmoon.providerapp.provider.table1";
@@ -886,4 +896,22 @@ URI 主要两种方式:
 > content://com.example.app.provider/*
 > 而一个能够匹配table1表中任意一行数据的内容URI格式就可以写成:
 > content://com.example.app.provider/table1/#
+
+`getType`是必须实现的方法.用于判断URI对象对应的MIME类型 *问题就在于不知道这个有啥用啊*
+
+规则如下:
+
+* vnd 开头
+* 如果URI以路径结尾则vnd后接`android.cursor.dir/`.如果以id结尾,则接`android.cursor.item/`
+* 最后接`vnd.<authority>.<path>`
+
+剩下的方法就直接访问数据库即可
+
+
+
+## 多媒体
+
+### 通知
+
+新版本需要使用Channel来创建通知
 
