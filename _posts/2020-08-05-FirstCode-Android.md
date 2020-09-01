@@ -1286,6 +1286,36 @@ out.writeBytes("username=admin&password=123456");
 
 
 
+> Android 9.0之后不能访问非加密连接。会报如下异常：
+>
+> CLEARTEXT communication to to 52.76.xx.xxx not permitted by network security policy
+>
+> 
+>
+> 解决：
+>
+> manifest.xml ->
+>
+> <application
+>
+> ...
+>
+> android:networkSecurityConfig="@xml/network_security_config"
+>
+> ...
+>
+> \>
+>
+> xml/network_security_config.xml
+>
+> <?xml version="1.0" encoding="utf-8"?>
+>
+> <network-security-config>
+>
+> ​    <base-config cleartextTrafficPermitted="true" />
+>
+> </network-security-config>
+
 ### OkHttp
 
 网络非常复杂,想要获得优秀的网络体验需要考虑很多东西.
@@ -1317,4 +1347,561 @@ out.writeBytes("username=admin&password=123456");
 ```
 
 ### 解析XML
+
+分为*Pull*和*SAX*两种方式
+
+##### Pull
+
+```Java
+    private void parseXMLWithPull(String xmlData) {
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(xmlData));
+            int eventType = xmlPullParser.getEventType();
+            String id = "";
+            String name = "";
+            String version = "";
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String nodeName = xmlPullParser.getName();
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        if ("id".equalsIgnoreCase(nodeName)) {
+                            id = xmlPullParser.nextText();
+                        } else if ("name".equalsIgnoreCase(nodeName)) {
+                            name = xmlPullParser.nextText();
+                        } else if ("version".equalsIgnoreCase(nodeName)) {
+                            version = xmlPullParser.nextText();
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if ("app".equalsIgnoreCase(nodeName)) {
+                            Log.i(TAG, "parseXMLWithPull: id -> " + id);
+                            Log.i(TAG, "parseXMLWithPull: name -> " + name);
+                            Log.i(TAG, "parseXMLWithPull: version -> " + version);
+                        }
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+```
+
+##### SAX
+
+```Java
+
+    private void parseXMLWithSAX(String responseData) {
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+            MyHandler handler = new MyHandler();
+            xmlReader.setContentHandler(handler);
+            xmlReader.parse(new InputSource(new StringReader(responseData)));
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+public class MyHandler extends DefaultHandler {
+    private String nodeName;
+    private StringBuilder id;
+    private StringBuilder name;
+    private StringBuilder version;
+    private String TAG = "lmoon";
+
+    @Override
+    public void startDocument() throws SAXException {
+        super.startDocument();
+        id = new StringBuilder();
+        name = new StringBuilder();
+        version = new StringBuilder();
+    }
+
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        super.startElement(uri, localName, qName, attributes);
+        nodeName = localName;
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        super.characters(ch, start, length);
+        if ("id".equals(nodeName)) {
+            id.append(ch, start, length);
+        } else if ("name".equals(nodeName)) {
+            name.append(ch, start, length);
+        } else if ("version".equals(nodeName)) {
+            version.append(ch, start, length);
+        }
+    }
+
+    @Override
+    public void endDocument() throws SAXException {
+        super.endDocument();
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        super.endElement(uri, localName, qName);
+        if ("app".equals(localName)) {
+            Log.i(TAG, "id : " + id.toString().trim());
+            Log.i(TAG, "name : " + name.toString().trim());
+            Log.i(TAG, "version : " + version.toString().trim());
+            id.setLength(0);
+            name.setLength(0);
+            version.setLength(0);
+        }
+    }
+
+}
+```
+
+
+
+### 解析JSON
+
+##### 默认API
+
+```Java
+
+    private void parseJSONWithJSONObject(String responseData) {
+        try {
+            JSONArray jsonArray = new JSONArray(responseData);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id = jsonObject.getString("id");
+                String name = jsonObject.getString("name");
+                String version = jsonObject.getString("version");
+                Log.i(TAG, "parseJSONWithJSONObject: id -> " + id);
+                Log.i(TAG, "parseJSONWithJSONObject: name -> " + name);
+                Log.i(TAG, "parseJSONWithJSONObject: version -> " + version);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+```
+
+##### GSON
+
+```gradle
+implementation 'com.google.code.gson:gson:2.8.6'
+```
+
+```Java
+
+    private void parseJSONWithGSON(String responseData) {
+        Gson gson = new Gson();
+        List<App> appList = gson.fromJson(responseData, new TypeToken<List<App>>() {
+        }.getType()); // 为什么要加{}
+        for (App app : appList) {
+            Log.i(TAG, "parseJSONWithGSON: id -> " + app.getId());
+            Log.i(TAG, "parseJSONWithGSON: name -> " + app.getName());
+            Log.i(TAG, "parseJSONWithGSON: version -> " + app.getVersion());
+        }
+
+    }
+```
+
+
+
+## 服务
+
+运行在后台的内容
+
+注意服务中的代码一样运行在主线程中,所以耗时操作同样需要自己开子线程或者使用封装好的多线程服务.
+
+##### 子线程中更新ui
+
+只有主线程代码能与ui交互,子线程会报错.所以简单的可以使用`runOnUiThread(Runnalbe)`来控制ui,复杂的使用Handler
+
+### Handler
+
+```Java
+private Handler handler = new Handler() {
+    public void handleMessage(Message msg) {
+        switch (msg.what) {
+            case UPDATE_TEXT:
+                // 在这里可以进行UI操作
+                text.setText("Nice to meet you");
+                break;
+            default:
+            	break;
+        }
+    }
+};
+
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        Message message = new Message();
+        message.what = UPDATE_TEXT;
+        handler.sendMessage(message); // 将Message对象发送出去
+    }
+}).start();
+
+```
+
+Handler机制:由Message,Handler,MessageQueue,Looper四部分组成
+
+* Message 消息的载体
+* Handler 用来处理消息
+* MessageQueue 消息队列,储存消息等待处理
+* Looper 调用Looper.loop之后会无限循环,将MessageQueue中的消息依次发给Handler处理.
+
+### AsyncTask
+
+Android提供的子线程操作封装,方便写耗时操作.
+
+```Java
+public class DownloadTask extends AsyncTask<String, Integer, Integer> {
+
+    public static final int TYPE_SUCCESS = 0;
+    public static final int TYPE_FAILED = 1;
+    public static final int TYPE_PAUSED = 2;
+    public static final int TYPE_CANCELED = 3;
+
+    private DownloadListener mDownloadListener;
+    private boolean isCanceled = false;
+    private boolean isPaused = false;
+    private int progress;
+    private String TAG = "lmoon.DownloadTask";
+
+    public DownloadTask(DownloadListener listener) {
+        mDownloadListener = listener;
+    }
+    @Override
+    protected Integer doInBackground(String... params) {
+        InputStream is = null;
+        RandomAccessFile savedFile = null;
+        File file = null;
+        try {
+            long downloadedLength = 0;
+            String downloadUrl = params[0];
+            String fileName = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+            String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+            Log.i(TAG, "doInBackground: file path - " + directory);
+            file = new File(directory + fileName);
+            if (file.exists()) {
+                downloadedLength = file.length();
+            }
+            long contentLength = getContentLength(downloadUrl);
+            if (contentLength == 0) {
+                Log.e(TAG, "doInBackground: Didn't find anything to download " + downloadUrl);
+                return TYPE_FAILED;
+            } else if (contentLength == downloadedLength) {
+                Log.d(TAG, "doInBackground: File downloaded.");
+                return TYPE_SUCCESS;
+            }
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .addHeader("RANGE", "bytes=" + downloadedLength + "-")
+                    .url(downloadUrl)
+                    .build();
+            Response response = client.newCall(request).execute();
+            if (response != null) {
+                is = response.body().byteStream();
+                savedFile = new RandomAccessFile(file, "rw");
+                savedFile.seek(downloadedLength);
+                byte[] b = new byte[1024];
+                int total = 0;
+                int len;
+                while ((len = is.read(b)) != -1) {
+                    if (isCanceled) {
+                        return TYPE_CANCELED;
+                    } else if (isPaused) {
+                        return TYPE_PAUSED;
+                    } else {
+                        total += len;
+                        savedFile.write(b);
+                        int progress = (int) ((total + downloadedLength) * 100 / contentLength);
+                        publishProgress(progress);
+                    }
+                }
+                response.body().close();
+                return TYPE_SUCCESS;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return TYPE_FAILED;
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+                if (savedFile != null) {
+                    savedFile.close();
+                }
+                if (isCanceled && file != null) {
+                    file.delete();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    private int lastProgress;
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        super.onProgressUpdate(values);
+        int progress = values[0];
+        if (progress > lastProgress) {
+            lastProgress = progress;
+            mDownloadListener.onProgress(progress);
+        }
+    }
+
+    @Override
+    protected void onPostExecute(Integer status) {
+        super.onPostExecute(status);
+        switch (status) {
+            case TYPE_SUCCESS:
+                mDownloadListener.onSuccess();
+                break;
+            case TYPE_FAILED:
+                mDownloadListener.onFailed();
+                break;
+            case TYPE_PAUSED:
+                mDownloadListener.onPause();
+                break;
+            case TYPE_CANCELED:
+                mDownloadListener.onCanceled();
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void pauseDownload(){
+        isPaused = true;
+    }
+    public void cancelDownload() {
+        isCanceled = true;
+    }
+
+    private long getContentLength(String downloadUrl) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(downloadUrl).build();
+        Response response = client.newCall(request).execute();
+        if (response != null && response.isSuccessful()) {
+            long contentLength = response.body().contentLength();
+            response.body().close();
+            return contentLength;
+        }
+        return 0;
+    }
+}
+```
+
+`public class DownloadTask extends AsyncTask<String, Integer, Integer> {` 
+
+三个范型参数,地一个表示传递给doInBackground的类型,第二个为进度单位,第三个是doInBackground返回结果类型,会传递到onPostExecute中.
+
+主要有四个方法
+
+* onPreExecute 子线程开始之前回调,用来进行一些ui初始化,如显示个对话框.不过也可以不用直接在调用task之前自己做.
+
+* doInBackground 子线程
+
+* onProgressUpdate 在doInBackground中调用publishProgress之后会回调这个方法,用来接收进度
+
+* onPostExecute 子线程结束后回调,此方法已经处于主线程中并且可以接收doInbackground的返回结果.
+
+
+
+### 基础的服务
+
+##### 创建
+
+AndroidStudio可以直接新建Service.
+
+手动:
+
+AndroidManifest 中注册`<service>`,然后类`extends Service`
+
+##### 启动和停止
+
+使用Intent来控制.
+
+```Java
+Intent intent = new Intent(this, DownloadService.class);
+startService(intent);
+
+...
+stopService(intent);
+```
+
+在service内部可以直接调用stopSelf来停止自己.
+
+周期: onCreate -> onStartCommand -> onDestoy
+
+仅第一次创建时会走onCreate,已经启动了的service会直接走onStartCommand.
+
+### 与服务通信
+
+使用startService之后,服务和之前的代码就没有关系了.可以使用bindService来与服务通信,通信结束后unbind与服务断开链接.
+
+服务自身重写onBind并返回binder对象,此时调用bind的地方通过传入的connecton中的onServiceConnected方法中可以拿到binder对象用来与服务通信.
+
+```Java
+	Intent intent = new Intent(this, DownloadService.class);
+	startService(intent);
+	bindService(intent, connection, BIND_AUTO_CREATE);
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(connection);
+    }
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService = (DownloadService.DownloadBinder) service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+--- Service:
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+    private DownloadBinder mBinder = new DownloadBinder();
+    class DownloadBinder extends Binder {
+        ...
+    }
+
+
+```
+
+*ps: bind和start没有什么关系,不过仅bind的话,unbind之后服务就会停止,而提前调用start,unbind之后服务还在运行.*
+
+### 生命周期
+
+> 一旦在项目的任何位置调用了Context的startService()方法,相应的服务就会启动起来,
+> 并回调onStartCommand()方法。如果这个服务之前还没有创建过,onCreate()方法会先于
+> onStartCommand()方法执行。服务启动了之后会一直保持运行状态,直到stopService()
+> 或stopSelf()方法被调用。注意,虽然每调用一次startService()方
+> 法,onStartCommand()就会执行一次,但实际上每个服务都只会存在一个实例。所以不管
+> 你调用了多少次startService()方法,只需调用一次stopService()或stopSelf()方法,服
+> 务就会停止下来了。
+> 另外,还可以调用Context的bindService()来获取一个服务的持久连接,这时就会回调服
+> 务中的onBind()方法。类似地,如果这个服务之前还没有创建过,onCreate()方法会先于
+> onBind()方法执行。之后,调用方可以获取到onBind()方法里返回的IBinder对象的实
+> 例,这样就能自由地和服务进行通信了。只要调用方和服务之间的连接没有断开,服务就
+> 会一直保持运行状态。
+> 当调用了startService()方法后,又去调用stopService()方法,这时服务中的
+> onDestroy()方法就会执行,表示服务已经销毁了。类似地,当调用了bindService()方法
+> 后,又去调用unbindService()方法,onDestroy()方法也会执行,这两种情况都很好理
+> 解。但是需要注意,我们是完全有可能对一个服务既调用了startService()方法,又调用
+> 了bindService()方法的,这种情况下该如何才能让服务销毁掉呢?根据Android系统的机
+> 制,一个服务只要被启动或者被绑定了之后,就会一直处于运行状态,必须要让以上两种
+> 条件同时不满足,服务才能被销毁。所以,这种情况下要同时调用stopService()和
+> unbindService()方法,onDestroy()方法才会执行。
+
+### 前台服务
+
+后台服务可能被杀死,前台的话基本不会,但是会有个无法取消的通知.
+
+```Java
+startForeground(1,getNotification("Downloading ...",0));
+
+---
+    private Notification getNotification(String title, int progress) {
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this,getNotificationChannel())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent)
+                .setContentTitle(title);
+        if (progress >= 0) {
+            builder.setContentText(progress + "%");
+            builder.setProgress(100, progress, false);
+        }
+        return builder.build();
+    }
+
+    private String getNotificationChannel() {
+        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+        // 通知渠道的id
+        String id = "LearnNotification";
+        // 用户可以看到的通知渠道的名字.
+        CharSequence name = getString(R.string.channel_name);
+        // 用户可以看到的通知渠道的描述
+        String description = getString(R.string.channel_description);
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel mChannel = new NotificationChannel(id, name, importance);
+        // 配置通知渠道的属性
+        mChannel.setDescription(description);
+        // 设置通知出现时的闪灯（如果 android 设备支持的话）
+        mChannel.enableLights(true);
+        mChannel.setLightColor(Color.RED);
+        // 设置通知出现时的震动（如果 android 设备支持的话）
+        mChannel.enableVibration(true);
+        mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+        //最后在notificationmanager中创建该通知渠道
+        //
+        manager.createNotificationChannel(mChannel);
+        return id;
+    }
+```
+
+*注意使用Channel*
+
+### IntentService
+
+默认API提供的封装了子线程的服务
+
+```Java
+
+public class MyIntentSercie extends IntentService {
+    /**
+     * Creates an IntentService.  Invoked by your subclass's constructor.
+     *
+     * @param name Used to name the worker thread, important only for debugging.
+     */
+    public MyIntentSercie(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        // your code
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+}
+```
+
+相比较于普通service,逻辑写在onHandleIntent中,此方法已经运行于子线程,所以可以执行耗时操作.并且当逻辑执行完不用手动stopservice/stopself,会自动停止运行并且回调onDestory.
+
+## MaterialDesign
+
+建议使用这个来设计界面,尤其是对个人来说.可以节省很大一部分精力一样能作出好看的ui.并且符合android设计ui规范.
+
+另外,虽然例子是一个个介绍,不过实际用的时候很多是一起用的,而且相互之间有关联效果.
+
+### ToolBar
+
+
 
