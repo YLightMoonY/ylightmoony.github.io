@@ -1901,7 +1901,381 @@ public class MyIntentSercie extends IntentService {
 
 另外,虽然例子是一个个介绍,不过实际用的时候很多是一起用的,而且相互之间有关联效果.
 
+```Script
+implementation 'com.android.support:design:28.0.0'
+```
+
 ### ToolBar
+
+ActionBar的替代.
+
+首先需要指定一个不带ActionBar的主题.
+
+```XML
+<!-- styles.xml -->
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+```
+
+*各种属性对应位置*
+
+![color property](./assets/FirstCode/material_design_toolbar_1.png)
+
+引用ToolBar
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:id="@+id/tool_bar"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+
+</FrameLayout>
+```
+
+Activity中:
+
+```Java
+        Toolbar toolbar = findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+```
+
+activity对应的label属性能决定toolbar左边显示的名字.
+
+### 滑动菜单 DrawerLayout
+
+从侧面划出来的菜单.
+
+Laytout:
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/drawer_layout"
+    tools:context=".chap12.DrawerLayoutActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:id="@+id/tool_bar" />
+    </FrameLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="HHHHHHHHHHHHHHHHHH"
+        android:layout_gravity="start"
+        android:background="#fff"
+        android:textSize="20sp" />
+
+</androidx.drawerlayout.widget.DrawerLayout>
+```
+
+父布局直接使用DrawerLayout,而子布局有两个,第一个是主界面,第二个是滑动菜单.
+
+在toolbar中显示一个按钮,点击之后直接显示滑动菜单
+
+Activity:
+
+```Java
+		Toolbar toolbar = findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        }
+
+
+---
+        @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Toast.makeText(this, "Menu clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+```
+
+*下面会使用到[circleview](https://github.com/hdodenhof/CircleImageView)这个第三方包 `implementation 'de.hdodenhof:circleimageview:3.1.0'`*
+
+#### NavigationView
+
+![DrawerLayout with NavigationView](./assets/FirstCode/material_design_navigationview.png)
+
+首先需要一个menu.xml
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_call"
+            android:icon="@drawable/nav_call"
+            android:title="Call" />
+        <item
+            android:id="@+id/nav_friends"
+            android:icon="@drawable/nav_friends"
+            android:title="Friends" />
+        <item
+            android:id="@+id/nav_location"
+            android:icon="@drawable/nav_location"
+            android:title="Location" />
+        <item
+            android:id="@+id/nav_mail"
+            android:icon="@drawable/nav_mail"
+            android:title="Call" />
+        <item
+            android:id="@+id/nav_task"
+            android:icon="@drawable/nav_task"
+            android:title="Tasks" />
+    </group>
+</menu>
+```
+
+然后是上面带图片的布局 headerLayout.
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="180dp"
+    android:padding="10dp"
+    android:background="?attr/colorPrimary"
+    >
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@drawable/a1"
+        android:id="@+id/icon_image"
+        android:layout_centerInParent="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mail"
+        android:layout_alignParentBottom="true"
+        android:textSize="14sp"
+        android:text="@string/mail" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/user_name"
+        android:text="@string/user_name"
+        android:textSize="14sp"
+        android:layout_above="@id/mail" />
+
+</RelativeLayout>
+```
+
+在DrawerLayout布局中第二个子布局使用NavigationView
+
+```XML
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="match_parent"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/nav_menu"
+        android:layout_height="match_parent" />
+```
+
+Activity中处理点击时间
+
+```Java
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                // 与menu处理方法一致,这里不再多写
+                //mDrawerLayout.closeDrawer(GravityCompat.START);
+                return true;
+            }
+        });
+```
+
+### 悬浮按钮 & 可交互提示
+
+#### FloatingActionButton
+
+```XML
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            app:elevation="10dp"
+            android:src="@drawable/ic_done" />
+```
+
+通过`app:elevation="10dp"`指定高度来控制阴影.值越大,范围大,效果淡.
+
+通过setOnClickListener来处理点击事件
+
+#### Snackbar
+
+可以认为是带有点击事件的Toast.从底部弹出.可以与FloatingActionButton联动.
+
+```Java
+Snackbar.make(v, "Data deleted", Snackbar.LENGTH_SHORT)
+                    .setAction("Undo", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Toast.makeText(FloatingActionButtonActivity.this, "Data restored", Toast.LENGTH_SHORT).show();
+                        }
+                    }).show();
+```
+
+#### CoordinatorLayout
+
+上面使用Snackbar弹出之后会将actionbutton遮挡住,使用这个layout会自动处理,将button上移.
+
+普通情况下等同于FrameLayout.
+
+```XML
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            app:elevation="10dp"
+            android:src="@drawable/ic_done" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+
+> 还记得我们在Snackbar的make()方法中传入的第一个参数吗?这个参数
+> 就是用来指定Snackbar是基于哪个View来触发的,刚才我们传入的是FloatingActionButton
+> 本身,而FloatingActionButton是CoordinatorLayout中的子控件,因此这个事件就理所应当
+> 能被监听到了。你可以自己再做个试验,如果给Snackbar的make()方法传入一个
+> DrawerLayout,那么Snackbar就会再次遮挡住悬浮按钮,因为DrawerLayout不是
+> CoordinatorLayout的子控件,CoordinatorLayout也就无法监听到Snackbar的弹出和隐藏事
+> 件了。
+
+### 卡片布局
+
+![DrawerLayout with NavigationView](./assets/FirstCode/material_design_cardview.png)
+
+
+
+基于FrameLayout,只是提供了圆角和阴影.
+
+*使用了第三方库[Glide](https://github.com/bumptech/glide) 用来加载图片*
+
+```XML
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="4dp"
+    android:layout_margin="5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        >
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:id="@+id/fruit_image"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/fruit_name"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="5dp"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+```
+
+#### AppBarLayout
+
+CoordinatorLayout就是增强的FrameLayout,所以子布局可能会出现Toolbar被挡住的问题.使用Appbarlayout处理.
+
+这是个垂直方向的LinerLayout.做了很多滚动事件封装.
+
+```XML
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/tool_bar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:layout_scrollFlags="scroll|enterAlways|snap"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        </com.google.android.material.appbar.AppBarLayout>
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        ...
+	</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+
+这时Toolbar就已经不会被挡住了.
+
+并且recyclerview的滚动事件会传递给appbarlayout.将appbarlayout设置`app:layout_scrollFlags="scroll|enterAlways|snap"`可以决定在recyclerview滚动时toolbar的行为.
+
+* scroll recyclerview向上滚动,toolbar会跟随上滚并隐藏
+* enterAlways recyclerview向下滚动,toolbar会跟随显示
+* snap toolbar没有完全隐藏或者显示则根据当前滚动距离自动决定隐藏还是显示
+
+### 下拉刷新
+
+
 
 
 
