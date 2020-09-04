@@ -2273,7 +2273,236 @@ CoordinatorLayout就是增强的FrameLayout,所以子布局可能会出现Toolba
 * enterAlways recyclerview向下滚动,toolbar会跟随显示
 * snap toolbar没有完全隐藏或者显示则根据当前滚动距离自动决定隐藏还是显示
 
-### 下拉刷新
+### 下拉刷新 SwipeRefreshLayout
+
+```XML
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/swipe_refresh"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+```
+
+```Java
+swipeRefreshLayout = findViewById(R.id.swipe_refresh);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshFruits();
+            }
+        });
+```
+
+### 可折叠标题栏
+
+#### CollapsingToolbarLayout
+
+不能单独使用,必须作为AppBarLayout子布局,AppBarLayout又必须是CoordinatorLayout子布局.
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:fitsSystemWindows="true"
+    android:layout_height="match_parent"
+    tools:context=".chap12.FruitActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:fitsSystemWindows="true"
+        >
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            android:fitsSystemWindows="true"
+            android:id="@+id/collapsing_toolbar" >
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/fruit_image_view"
+                android:scaleType="centerCrop"
+                app:layout_collapseMode="parallax"
+                android:fitsSystemWindows="true"/>
+
+            <androidx.appcompat.widget.Toolbar
+                android:layout_width="match_parent"
+                android:layout_height="?attr/colorPrimary"
+                android:id="@+id/tool_bar"
+                app:layout_collapseMode="pin" />
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_height="match_parent" >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="35dp"
+                android:layout_marginHorizontal="15dp"
+                android:layout_marginBottom="15dp"
+                app:cardCornerRadius="4dp"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/fruit_content_text"
+                    android:layout_margin="10dp" />
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_comment"
+        app:layout_anchor="@id/appBar"
+        app:layout_anchorGravity="bottom|end" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+
+` app:layout_scrollFlags="scroll|exitUntilCollapsed"` : scroll表示CollapsingToolbarLayout会随着水果内容详情的滚动一起滚动,exitUntilCollapsed表示当CollapsingToolbarLayout随着滚动完成折叠之后就保留在界面上,不再移出屏幕。
+
+`app:layout_collapseMode="pin" ` : 表示在折叠的过程中位置始终保持不变
+
+`app:layout_collapseMode="parallax"` : 表示会在折叠的过程中产生一定的错位偏移
+
+#### 使用statusbar空间 `android:fitsSystemWindow`
+
+需要将想要显示到statusbar位置的控件及其父布局全部设置这个属性
+
+## 其他技巧
+
+### Intent传递对象
+
+##### `implements Serializable`
+
+Java本身的序列化机制,Intent可以传递Serial对象.
+
+##### `implements Parcelable`
+
+Android自身的方式,将一个完整的对象分解.分解成Intent本身支持的数据类型.
+
+```Java
+public class Person implements Parcelable {
+    private String name;
+    private int age;
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeInt(age);
+    }
+
+    public static final Parcelable.Creator<Person> CREATOR = new Creator<Person>() {
+        @Override
+        public Person createFromParcel(Parcel source) {
+            Person person = new Person();
+            person.name = source.readString();
+            person.age = source.readInt();
+            return person;
+        }
+
+        @Override
+        public Person[] newArray(int size) {
+            return new Person[size];
+        }
+    };
+}
+```
+
+`describeContents` return 0即可
+
+`writeToParcel` 调用dest的write方法.将成员变量都写进去.
+
+`public static final Parcelable.Creator<Person> CREATOR` 必须要有的CREATOR newArray很简单.createFromeParcel创建本对象并逐个read,并且,此时的顺序需要和writeToParcel一致.
+
+
+
+### 定时任务
+
+##### Alarm
+
+```java
+AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+long triggerAtTime = SystemClock.elapsedRealtime() + 10 * 1000;
+manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pendingIntent);
+```
+
+> 第一个参数是一个整型参数,用于指定AlarmManager
+> 的工作类型,有4种值可选,分别是ELAPSED_REALTIME、ELAPSED_REALTIME_WAKEUP、RTC和
+> RTC_WAKEUP。其中ELAPSED_REALTIME表示让定时任务的触发时间从系统开机开始算起,但
+> 不会唤醒CPU。ELAPSED_REALTIME_WAKEUP同样表示让定时任务的触发时间从系统开机开始
+> 算起,但会唤醒CPU。RTC表示让定时任务的触发时间从1970年1月1日0点开始算起,但不
+> 会唤醒CPU。RTC_WAKEUP同样表示让定时任务的触发时间从1970年1月1日0点开始算起,
+> 但会唤醒CPU。使用SystemClock.elapsedRealtime()方法可以获取到系统开机至今所经历
+> 时间的毫秒数,使用System.currentTimeMillis()方法可以获取到1970年1月1日0点至今所
+> 经历时间的毫秒数。
+
+不过随着Android发展,对后台的限制越来越大,这种方式可能不准确
+
+##### Doze 系统的后台控制
+
+##### 多窗口模式
+
+可以同时打开两个窗口,不过并不常用.
+
+生命周期: 进入多窗口状态会重新从onCreate走一遍.同时打开两个窗口后如果切换到另一个窗口,则本应用会进入onpause,返回就onresume.
+
+可以在activity加入下列属性
+
+```XML
+<activity
+android:name=".MainActivity"
+android:label="Fruits"
+android:configChanges="orientation|keyboardHidden|screenSize|screenLayout">
+```
+
+加入了这行配置之后,不管是进入多窗口模式,还是横竖屏切换,活动都不会被重新创建,而是会将屏幕发生变化的事件通知到Activity的onConfigurationChanged()方法当中
+
+`android:resizeableActivity=["true" | "false"]` 可以选择禁用多窗口
+
+##### Lambda
+
+build.gradle
+
+```Script
+compileOptions {
+sourceCompatibility JavaVersion.VERSION_1_8
+targetCompatibility JavaVersion.VERSION_1_8
+}
+```
+
+
+
+
 
 
 
