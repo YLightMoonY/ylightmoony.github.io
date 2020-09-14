@@ -1,6 +1,7 @@
 ---
 title: Kotlin 笔记
 layout: post
+typora-root-url: ../
 ---
 
 # Kotlin 笔记
@@ -276,7 +277,7 @@ fun message(name: String, lang: String) = "Hi ${name}, welcome to ${lang}!"
 
 
 
-## 对象
+## 面向对象
 
 ### 类和接口
 
@@ -354,5 +355,173 @@ val bird2 = Bird(weight = 1000.00, color = "black")
 
 ##### init
 
+```kotlin
+class Bird(weight: Double, age: Int, color: String) {
+    val weight: Double
+    val age: Int
+    val color: String
+    init {
+        this.weight = weight
+        println("The bird's weight is ${this.weight}.")
+        this.age = age
+        println("The bird's age is ${this.age}.")
+    }
+}
+```
+
 类似与static代码快,不过可以访问非static成员
+
+一个类可以有多个init块,类初始化时按照顺序执行.
+
+##### 延迟初始化
+
+有的属性不会在构造时赋值,可以用`by lazy` `latinit`让它延迟赋值
+
+> 即它可以不用在类对象初始化的时候就必须有值
+
+```kotlin
+class Bird(val weight: Double,val age: Int,val color: String){
+    val sex : String by lazy {
+        if(color == "yellow") "male" else "female"
+    }
+}
+```
+
+使用`by lazy` 
+
+* 必须是val类型,不能var
+
+* 首次被调用时赋值,并且后续不能改变.
+
+* 具备同步锁,只能有一个线程访问,线程安全.可以传入如下参数取消单线程限制.
+
+  ```kotlin
+  val sex: String by lazy(LazyThreadSafetyMode.PUBLICATION){
+      if(color == "yellow") "male" else "female"
+  }
+  
+  val sex: String by lazy(LazyThreadSafetyMode.NONE){
+      if(color == "yellow") "male" else "female"
+  }
+  ```
+
+使用`lateinit`
+
+* 不能用于基本数据类型
+* 只能用于var类型
+
+```kotlin
+class Bird(val weight: Double,val age: Int,val color: String){
+    lateinit var sex : String
+    fun printSex() {
+        this.sex = if(this.color == "yellow") "male" else "female"
+        println("sex - " + sex);
+    }
+}
+```
+
+**Kotlin int 不会自动转换成double,所以需要double的地方必须手动加上.0**
+
+`Delegates.notNull<T>`
+
+对基本数据类型延迟赋值
+
+```kotlin
+var test by Delegates.notNull<Int>()
+fun xXXXX(){
+    test = 1
+    test = 2
+}
+```
+
+#### 构造
+
+Kotlin也可以实现多个构造方法,不过分为主从构造,类外面那个`class Bird(....)`为主构造,其他的为从
+
+从构造必须直接或间接调用主构造
+
+```kotlin
+class MyView : View {
+    constructor(context : Context) : this(context,null)
+    constructor(context : Context,attrs : AttributeSet?) : this(context,attrs,0)
+    constructor(context : Context,attrs : AttributeSet?,defStyleAttr: Int) : super(context,attrs,defStyleAttr) {
+        ....
+    }
+}
+```
+
+#### 继承
+
+```kotlin
+open class Bird {
+    open fun fly() {
+        println("Flying..")
+    }
+}
+
+class Penguin : Bird {
+    override fun fly() {
+        println("Can't fly,QAQ")
+    }
+}
+```
+
+* 直接使用 : 代替 extends implements
+* 默认均为final,所以允许被继承的类和成员需要使用open修饰
+
+#### 访问控制
+
+*子类应该尽量避免重写父类的非抽象方法*
+
+> 里氏替换原则
+>
+> 对里氏替换原则通俗的理解是:子类可以扩展父类的功能,但不能改变父类原有的功
+> 能。它包含以下4个设计原则:
+> ·子类可以实现父类的抽象方法,但不能覆盖父类的非抽象方法;
+> ·子类可以增加自己特有的方法;
+> ·当子类的方法实现父类的方法时,方法的前置条件(即方法的形参)要比父类方法
+> 的输入参数更宽松;
+> ·当子类的方法实现父类的抽象方法时,方法的后置条件(即方法的返回值)要比父
+> 类更严格。
+
+##### 默认修饰符 final
+
+##### sealed
+
+`sealed class Bird` 则可以被继承,但是子类必须和父类在同一个文件中.但是sealed声明的类为抽象类,无法被初始化.
+
+##### abstrat 同Java,使用后可以被继承且没有sealed限制
+
+##### 可见性控制
+
+> 1)Kotlin与Java的默认修饰符不同,Kotlin中是public,而Java中是
+> default。
+> 2)Kotlin中有一个独特的修饰符internal。
+> 3)Kotlin可以在一个文件内单独声明方法及常量,同样支持可见性修饰符。
+> 4)Java中除了内部类可以用private修饰以外,其他类都不允许private修饰,
+> 而Kotlin可以。
+> 5)Kotlin和Java中的protected的访问范围不同,Java中是包、类及子类可访
+> 问,而Kotlin只允许类及子类。
+
+###### internal :　模块内访问，
+
+> ·一个Eclipse项目
+> ·一个Intellij IDEA项目
+> ·一个Maven项目
+> ·一个Grandle项目
+> ·一组由一次Ant任务执行编译的代码
+
+部分java类库的类会使用default.只能在包内访问,这时第三方引用的时候只要创建同名包就能访问到这个类,而internal的不会.
+
+###### private
+
+仅当前文件内可以访问,java是内部类可以访问.
+
+###### protected
+
+java 中是包,类,子类. kotlin中没有包作用域,所以只是类,子类
+
+![Visibility](/assets/KotlinCore/3_visibility.png)
+
+
 

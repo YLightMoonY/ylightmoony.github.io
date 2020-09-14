@@ -1,6 +1,7 @@
 ---
 title: 第一行代码-Android 笔记
 layout: post
+typora-root-url: ../
 ---
 
 # 第一行代码-Android
