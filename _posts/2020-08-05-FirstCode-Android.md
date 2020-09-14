@@ -28,7 +28,7 @@ typora-root-url: ../
 
 4. 应用层
 
-![Android 架构](./assets/FirstCode/Android-Framework.svg.png)
+![Android 架构](/assets/FirstCode/Android-Framework.svg.png)
 
 
 
@@ -196,7 +196,7 @@ Android是使用一个不可被应用访问的栈来管理。
 
 `onRestart` 由停止重新运行时触发
 
-![生命周期](./assets/FirstCode/2_activity_life.png)
+![生命周期](/assets/FirstCode/2_activity_life.png)
 
 
 
@@ -434,7 +434,7 @@ RightFragment rightFragment = (RightFragment) getSupportFragmentManager()
    * Activity被销毁
    * 没有被addToBackStack而被remove,replace
 
-![Fragment 生命周期](./assets/FirstCode/4_fragment_lifecycle.png)
+![Fragment 生命周期](/assets/FirstCode/4_fragment_lifecycle.png)
 
 
 
@@ -1925,7 +1925,7 @@ ActionBar的替代.
 
 *各种属性对应位置*
 
-![color property](./assets/FirstCode/material_design_toolbar_1.png)
+![color property](/assets/FirstCode/material_design_toolbar_1.png)
 
 引用ToolBar
 
@@ -2032,7 +2032,7 @@ Activity:
 
 #### NavigationView
 
-![DrawerLayout with NavigationView](./assets/FirstCode/material_design_navigationview.png)
+![DrawerLayout with NavigationView](/assets/FirstCode/material_design_navigationview.png)
 
 首先需要一个menu.xml
 
@@ -2193,7 +2193,7 @@ Snackbar.make(v, "Data deleted", Snackbar.LENGTH_SHORT)
 
 ### 卡片布局
 
-![DrawerLayout with NavigationView](./assets/FirstCode/material_design_cardview.png)
+![DrawerLayout with NavigationView](/assets/FirstCode/material_design_cardview.png)
 
 
 
