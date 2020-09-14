@@ -469,7 +469,7 @@ class Penguin : Bird {
 * 直接使用 : 代替 extends implements
 * 默认均为final,所以允许被继承的类和成员需要使用open修饰
 
-#### 访问控制
+### 访问控制
 
 *子类应该尽量避免重写父类的非抽象方法*
 
@@ -524,4 +524,6 @@ java 中是包,类,子类. kotlin中没有包作用域,所以只是类,子类
 ![Visibility](/assets/KotlinCore/3_visibility.png)
 
 
+
+### 多继承
 
