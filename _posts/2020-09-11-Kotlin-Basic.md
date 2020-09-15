@@ -527,3 +527,253 @@ java 中是包,类,子类. kotlin中没有包作用域,所以只是类,子类
 
 ### 多继承
 
+#### 接口多继承
+
+```kotlin
+interface Flyer {
+    fun fly()
+    fun kind() = "Flying animals"
+}
+interface Animal {
+    val name : String
+    fun eat()
+    fun kind() = "Flying animals"
+}
+
+class Bird(override val name : String) : Flyer,Animal{
+    override fun eat() {
+        println("I can eat")
+    }
+
+    override fun fly() {
+        println("I can fly")
+    }
+
+    override fun kind(): String {
+        return super<Flyer>.kind()
+    }
+}
+
+fun main(args : Array<String>){
+    val bird = Bird("sparrow")
+    println(bird.kind())
+}
+```
+
+多继承时通过范型来制定实际调用的是哪个父接口的方法. `super<Flyer>`
+
+###### getter setter
+
+当定义一个成员变量时,编译器会自动帮忙生成getter setter,不用再生成模板代码.
+
+val因为不可更改,所以只有getter方法(因为实际java实现的val就是一个getter方法)
+
+var会同时又getter setter
+
+#### 内部类多继承
+
+```kotlin
+package chap03
+
+class OuterKotlin{
+    val name = "Truely kotlin's inner class"
+    inner class InnerKotlin {
+        fun printNmae() {
+            println("The name is $name")
+        }
+    }
+}
+
+fun main() {
+    OuterKotlin().InnerKotlin().printNmae()
+}
+```
+
+kotlin 中需要用inner class声明一个内部类,此时才可以直接引用外部类属性.
+
+如果不声明inner,则默认是一个static内部类(嵌套类),不能引用外部类非static属性.
+
+#### **委托代替多继承** `by`
+
+kotlin新语法.
+
+```kotlin
+interface  CanFly{
+    fun fly()
+}
+interface CanEat {
+    fun eat()
+}
+open class Flyer1 : CanFly {
+    override fun fly() {
+        println("I can fly")
+    }
+}
+open class Animal1 : CanEat {
+    override fun eat() {
+        println("I can eat")
+    }
+}
+class Bird1(flyer : Flyer1,animal : Animal1) : CanFly by flyer,CanEat by animal{}
+
+fun main() {
+    val flyer = Flyer1()
+    val animal = Animal1()
+    val b = Bird1(flyer,animal)
+    b.fly()
+    b.eat()
+}
+```
+
+这样调用的时候可以直接通过Bird1本身的fly eat方法,会自动委托flyer animal对应方法去执行.
+
+*kotlin作用域到底怎么算,同一个包不同文件不算不同作用域不能定义同名类*
+
+### 数据类
+
+*JavaBean 的kotlin版本*
+
+```kotlin
+data class Bird(var weight : Double,var age : Int,var color : String)
+```
+
+通过data关键字定义
+
+这样的类会编译会自动生成getter,setter,构造,equals,toString,copy,componentN等一系列方法
+
+componentN的意义
+
+可以将类属性一次性绑定到变量上
+
+``` kotlin
+varl b1 = Bird(10.0,1."blue")
+val (weight,age,color) = b1
+```
+
+就是通过componentN实现
+
+类似操作
+
+```kotlin
+val (weight,age,color) = "10.0,1,blue",split(",")
+```
+
+不过这种数组型的一次性赋值最多支持5个,如果太多就会完全搞不明白怎么对应.
+
+自己实现componentN:
+
+```kotlin
+data class Bird(var weight: Double, var age: Int, var color: String) {
+    var sex = 1
+    operator fun component4(): Int { //operator关键字
+    	return this.sex
+    }
+    constructor(weight: Double, age: Int, color: String, sex: Int) : this(weight, age, color) {
+    	this.sex = sex
+    }
+}
+```
+
+Pair, Triple 一次性赋值:
+
+```kotlin
+val (weightP, ageP) = Pair(20.0, 1)
+val (weightT, ageT, colorT) = Triple(20.0, 1, "blue")
+```
+
+#### 约定和使用
+
+> ·数据类必须拥有一个构造方法,该方法至少包含一个参数,一个没有数据的数据类
+> 是没有任何用处的;
+> ·与普通的类不同,数据类构造方法的参数强制使用var或者val进行声明;
+> ·data class之前不能用abstract、open、sealed或者inner进行修饰;
+
+### object
+
+#### 伴生 `companion object`
+
+```kotlin
+class Prize(val name: String, val count: Int, val type: Int){
+    companion object{
+        val TYPE_REDPACK = 0
+        val TYPE_COUPON = 1
+        fun isRedpack(prize : Prize) : Boolean {
+            return prize.type == TYPE_REDPACK
+        }
+    }
+}
+
+fun main() {
+    val prize = Prize("红包啊",10,Prize.TYPE_REDPACK)
+    println(Prize.isRedpack(prize))
+}
+```
+
+`companion object{`块内直接就被定义为static属性和方法.
+
+#### 工厂模式
+
+```kotlin
+class Prize private constructor(val name: String, val count: Int, val type: Int) {
+	companion object {
+        val TYPE_COMMON = 1
+        val TYPE_REDPACK = 2
+        val TYPE_COUPON = 3
+        val defaultCommonPrize = Prize("普通奖品", 10, Prize.TYPE_COMMON)
+        fun newRedpackPrize(name: String, count: Int) = Prize(name, count, Prize.TYPE_REDPACK)
+        fun newCouponPrize(name: String, count: Int) = Prize(name, count, Prize.TYPE_COUPON)
+        fun defaultCommonPrize() = defaultCommonPrize //无须构造新对象
+    }
+}
+fun main(args: Array<String>) {
+    val redpackPrize = Prize.newRedpackPrize("红包", 10)
+    val couponPrize = Prize.newCouponPrize("十元代金券", 10)
+    val commonPrize = Prize.defaultCommonPrize()
+}
+
+```
+
+#### 单例
+
+```kotlin
+object DatabaseConfig{
+    var host : String = "127.0.0.1"
+    var .........
+}
+```
+
+之后直接用DatabaseConfig调用即可,直接调用的就是一个单例对象,不是类.
+
+#### object表达式
+
+object 实现匿名内部类:
+
+```kotlin
+Collections.sort(list, object : Comparator<String>{
+        override fun compare(o1: String?, o2: String?): Int {
+            if(o1 == null)
+                return -1
+            if(o2 == null)
+                return 1
+            return o1.compareTo(o2) 
+        }
+    })
+```
+
+当然这种简单的直接用lambda表达式更方便:
+
+```kotlin
+val comparator = Comparator<String> { s1, s2 ->
+    if (s1 == null)
+    	return@Comparator -1 //我们已经在第2章中接触过这种语法了
+    else if (s2 == null)
+    	return@Comparator 1
+    s1.compareTo(s2)
+}
+Collections.sort(list, comparator)
+
+```
+
+*前面说的那么点根本没高明白lambda到底怎么用的,太乱了*
+
+## 
