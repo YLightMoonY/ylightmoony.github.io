@@ -6,6 +6,10 @@ typora-root-url: ../
 
 # Kotlin 笔记
 
+[TOC]
+
+
+
 ## 认识Kotlin
 
 #### Kotlin Scala Java
@@ -776,4 +780,102 @@ Collections.sort(list, comparator)
 
 *前面说的那么点根本没高明白lambda到底怎么用的,太乱了*
 
-## 
+
+
+## 代数数据类型和模式匹配
+
+### 代数数据类型 (Algebraic Data Type,ADT)
+
+#### 计数
+
+Boolean有true和false,计数2
+
+Unit 只有本身一个值,计数1.
+
+#### 积类型
+
+```kotlin
+class BooleanProduceUnit(a : Boolean, b : Unit){}
+```
+
+计数 Boolean(2) * Unit(1) = BooleanProduceUnit(2)
+
+#### 和类型
+
+```kotlin
+enum class Day{SUN,MON,TUE,WED,THU,FRI,SAT}
+```
+
+计数 Day.SUN + Day.MON + ... + Day.SAT = 7
+
+##### 密封类
+
+子类只能定义在父类或者同一个文件中.
+
+```kotlin
+sealed class Day {
+    class SUN : Day()
+    class MON : Day()
+    ...
+    class SAT : Day()
+}
+```
+
+这样使用when进行分支处理时可以不用处理else情况,保证能将每个值都列举出来.
+
+```kotlin
+fun schedule(day : Day) = when(day){
+    is Day.SUN -> xxxx()
+    is Day.MON -> xxx()
+    ...
+    is Day.SAT -> x()
+}
+```
+
+编译器会检查是否所有情况都被列举出来.
+
+#### 构造代数数据类型
+
+```kotlin
+sealed class Shap {
+    class Circle(val radius : Double) : Shap()
+    class Rectangle(val width : Double,val height: Double) : Shap()
+    class Triangle(val base : Double,val height : Double) : Shap()
+}
+```
+
+### 模式匹配
+
+模式 也就是表达式,比如 5,a+b, a> b ......
+
+#### 常见模式
+
+##### 常量模式
+
+比较常量是否相等
+
+```kotlin
+fun constantPattern(a: Int) : String = when (a) {
+    1 -> "It's 1"
+    2 -> "It's 2"
+    else -> "Not my number"
+}
+```
+
+##### 类型模式
+
+如上面的Shap
+
+##### 逻辑表达式模式
+
+```kotlin
+fun logicPattern(a : Int) = when {
+    a in 1..11 -> println("${a} is smaller than 12 and bigger than 0")
+    else -> println("ELSE")
+}
+```
+
+更类似于if..else if..else了
+
+#### 嵌套表达式
+
