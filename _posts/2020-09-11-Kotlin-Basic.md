@@ -879,3 +879,97 @@ fun logicPattern(a : Int) = when {
 
 #### 嵌套表达式
 
+*还举了半天scala例子,不懂scala真的看的很困难*
+
+可以考虑使用递归的方式去嵌套
+
+### 增强kotlin模式匹配
+
+#### 类型测试/类型转换
+
+```Java
+if(expr instanceof Expr.Operate) {
+(Expr.Operate) expr ...
+}
+```
+
+kotlin因为支持smart-cast,所以只需要类型测试即可.
+
+```kotlin
+expr.left is Expr.Num && expr.left.value == 0
+```
+
+#### 面向对象分解
+
+> 通过在父类中定义一系列的测试方法(比如上面的
+> 测试是否为数值),然后在子类中实现这些方法,就可以在不同的子类中来做相应的操作
+> 了。
+
+```kotlin
+
+sealed class Expr {
+    abstract fun isZero() : Boolean
+    abstract fun isAddZero() : Boolean
+    abstract fun left() : Expr
+    abstract fun  right() : Expr
+    data class Num(val value: Int) : Expr() {
+        override fun isAddZero(): Boolean {
+            return false
+        }
+
+        override fun isZero(): Boolean {
+            return this.value == 0
+        }
+
+        override fun left(): Expr {
+            throw Throwable("no element")
+        }
+
+        override fun right(): Expr {
+            throw Throwable("no element")
+        }
+    }
+
+    data class Operate(val opName:String,val left:Expr,val right: Expr) : Expr() {
+        override fun left(): Expr {
+            return left
+        }
+
+        override fun right(): Expr {
+            return right
+        }
+
+        override fun isZero(): Boolean {
+            return false
+        }
+
+        override fun isAddZero(): Boolean {
+            return this.opName == "+" &&
+                    (this.left.isZero() || this.right.isZero())
+        }
+    }
+}
+
+val expr = Expr.Operate("+", Expr.Num(0), Expr.Operate("+", Expr.Num(0), Expr.Num(1)))
+fun simplifyExpr(expr: Expr): Expr = when {
+    expr.isAddZero() && expr.right().isAddZero() && expr.right().left().isZero() -> expr.right().right()
+    else -> expr
+}
+
+```
+
+* 优势:　简单结构的数据极大精简语法
+* 劣势: 复杂结构会给每个子类都增加大量无用方法,比如对Num来说必须要实现一次left right
+
+#### 访问者模式
+
+> 表示一个作用于某对象结构中的各元素的操作,它使你可以在不改变各元素类的前提下定义作用于这些元素的新操作。
+
+
+
+> ·Typecase
+> ·样本类(Case Classes)
+> ·抽取器(Extractor)
+>
+> 暂时在Kotlin中还不能实现
+
