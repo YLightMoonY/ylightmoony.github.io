@@ -120,3 +120,86 @@ randint(1,100)
 
 ## 函数
 
+### 定义与调用
+
+```python
+def getAnswer(answerNumber):
+	if answerNumber == 1 :
+		return 'It\'s one'
+	elif answerNumber == 2:
+		return 'It\'s two'
+	else :
+		return 'Wrong number'
+
+result = getAnswer(random.randint(1,9))
+print(result)
+```
+
+当函数没有返回值则py默认返回一个None（数据类型为NoneType），可以尝试：
+
+函数调用时可以
+
+调用函数填参数时一般是按照顺序一一对应，不过可以自己指定将变量付给哪个参数
+
+```python
+print('Hello', end='')
+```
+
+### 作用域
+
+写在函数内部的参数称为局部变量，对应局部作用域。
+
+外部称为全局变量，对应全局作用域
+
+局部变量在函数执行后销毁，也就是说在外部不能调用局部变量，而全局变量则可以在局部作用于中引用。
+
+在函数内部不能更改全局变量值，除非在使用前先使用global声明
+
+```python
+def spam():
+	global eggs
+	eggs = 'spam'
+```
+
+一个参数只能有一个作用域，或局部，或全局，不能同时充当，否则会报错。
+
+```python
+eggs = 'asdf'
+def spam():
+	print(eggs)
+	global eggs
+	eggs = 'spam' # global
+
+File "F:\work\python\Learn\chap03\sameName.py", line 4
+    global eggs
+    ^
+SyntaxError: name 'eggs' is used prior to global declaration
+---
+def spam():
+print(eggs) # ERROR!
+	eggs = 'spam local'
+eggs = 'global'
+
+Traceback (most recent call last):
+File "C:/test3784.py", line 6, in <module>
+spam()
+File "C:/test3784.py", line 2, in spam
+print(eggs) # ERROR!
+UnboundLocalError: local variable 'eggs' referenced before assignment
+```
+
+### 异常
+
+等同于java，只是catch改为except
+
+```python
+	try:
+		return 42 / divideBy
+	except Exception:
+        ...
+```
+
+
+
+## 列表
+
