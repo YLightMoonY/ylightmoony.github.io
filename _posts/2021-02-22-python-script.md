@@ -203,3 +203,113 @@ UnboundLocalError: local variable 'eggs' referenced before assignment
 
 ## 列表
 
+包含有多个数据的变量
+
+[1,2,3,'asdf',234]
+
+python是动态类型语言，所以一个列表可以包含有不同类型的变量，虽然。。想不到实际使用中有什么意义，大部分是同类型放到一个列表里面。
+
+### 操作
+
+#### 访问
+
+同其他语言，用从0开始的下标，只是支持负数下标，-1是最后一项，-2是倒数第二项，以此类推
+
+##### 切片
+
+`spam[0:4]`获取下标从0到4（不包含4）的新列表。
+
+可以省略第一个值则默认0，省略第二个值则默认到最后一个，全部省略则直接是一个新列表，等同于copy
+
+ +（连接） *（复制） len（求长度）
+
+del spam[2] 删除指定下标的值，后面的值依次向前
+
+#### 使用
+
+```python
+for i in [1,2,3]: #用于for
+    print(i)
+a in [1,2,3] # 判断存在
+a not in [1,2,3] # 判断不存在
+a,b,c = [1,2,3] #多重赋值
+```
+
+#### 增删改查
+
+```python
+spam = ['hello','hi','howdy','heyas']
+
+print(spam.index('hello'))
+print(spam.index('howdy'))
+
+# print(spam.index('asdf')) #ValueError: 'asdf' is not in list
+
+spam.insert(2,'asdf')
+spam.append('qwer')
+spam.insert(12,'zxcv')
+print(spam)
+
+spam.remove('qwer')
+del spam[0]
+print(spam)
+
+```
+
+### 排序
+
+```python
+spam.sort()
+print(spam)
+spam.sort(reverse=True)
+print(spam)
+spam.append('Hasdf')
+spam.sort()
+print(spam)
+# 默认排序按照ASCII表，所以大写直接在小写前面
+# 下面的方法全部视为小写
+# 不知道有没有办法自定义排序规则
+spam.sort(key=str.lower)
+print(spam)
+```
+
+### 字符串 元组
+
+不可变的列表为元组，用()括起来，字符串可以视为特殊元组。
+
+```python
+(1,2,3)
+(1,)
+```
+
+只包含一个元素的元组需要在后面加个`,`否则视为一个被括号括起来的值
+
+所以很多之前介绍的字符串操作可以用在列表上
+
+列表和元组之间可以相互转换
+
+`list((1,2,3))` 元组-> 列表
+
+`tuple([1,2,3])` 列表 -> 元组
+
+### 引用
+
+同其他语言，列表传递的是引用，基本类型传递的是值。*不过实际要看底层实现吧*
+
+同样可以全部视为引用。
+
+那么将不可变类型传递过去的操作类似于两只手握住同一张纸，其中一个重新赋值就是一只手拿了另一个东西，不影响第二只手还握着纸。
+
+可变类型如列表传递过去同样是握着一张纸，更改列表中的值只是在纸上画了东西，不影响两只手还握着同一张纸，表现起来就是两个都改变了。
+
+### 复制
+
+```python
+import copy
+spam = [1,2,3]
+asdf = copy.copy(spam)
+
+qwer = [1,2,[3,4,5]]
+zxcv = copy.deepcopy(qwer)
+```
+
