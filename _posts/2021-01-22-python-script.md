@@ -313,3 +313,118 @@ qwer = [1,2,[3,4,5]]
 zxcv = copy.deepcopy(qwer)
 ```
 
+
+
+## 字典
+
+### 基础
+
+`{'a':234 , 456:'asdf'}`
+
+用于储存键值对，类似于map。
+
+python的字典是无序的
+
+##### 常用方法
+
+* keys() 获取所有键
+* values() 获取所有值
+* items() 获取键值对元组
+
+##### 常用读写
+
+```python
+spam = {'a': 123, 'b' : 345}
+
+# 直接用
+print(spam['a'])
+>>> KeyError: 'asdf'
+
+print(spam['c'])
+
+# get 没有则返回第二个参数
+print(spam.get('c',0))
+
+# 直接写
+spam['c'] = asdf
+
+# 设置默认值,如果没有对应键就添加，如果有则不作处理
+spam.setdefault('d',123)
+print(spam)
+>>>{'a': 123, 'b': 345, 'd': 123}
+
+spam.setdefault('d',456)
+print(spam)
+>>>{'a': 123, 'b': 345, 'd': 123}
+```
+
+### pprint
+
+格式化输出工具
+
+`pprint.pprint(...)` 格式化输出
+
+`pprint.pformat(...)` 获取格式化字符串
+
+
+
+## 字符串操作
+
+*最多的任务之一*
+
+### 处理
+
+py的字符串可以用'' 也可以用 ""
+
+\表示转义，同其他语言
+
+`r'That is Carol\'s cat.'` 在字符串外加个r表示原始字符串，可以将\打印出来，只是\依旧会起作用让后面的'表示为字符，而不是结束标志。
+
+''' """ 三个引号包含可以组成多行字符串
+
+```python
+'''Dear Alice,
+Eve's cat has been arrested for catnapping, cat burglary, and extortion.
+Sincerely,
+Bob'''
+```
+
+也常用于多行注释
+
+同样具有[1:5]的切片操作，不包含坐标5
+
+同样有in，not in的判断
+
+### 字符串方法
+
+upper() lower() isupper() islower() 大小写转换及判断，会生成新字串
+
+> isalpha()返回True， 如果字符串只包含字母， 并且非空；
+> isalnum()返回True， 如果字符串只包含字母和数字， 并且非空；
+> isdecimal()返回True， 如果字符串只包含数字字符， 并且非空；
+> isspace()返回True， 如果字符串只包含空格、 制表符和换行， 并且非空；
+> .istitle()返回True， 如果字符串仅包含以大写字母开头、 后面都是小写字母的单
+> 词。  
+
+startswith() endswith() 判断开始和结束
+
+`', '.join(['cats', 'rats', 'bats'])` 将.join前面的字符串插入到后面的列表每一项之间成为一整个字符串
+
+`'My name is Simon'.split(' ')` 将.split前面的用后面的分割
+
+`'hello'.rjust(10) 'hello'.ljust(10) 'hello'.center(10)` 生成长度10的字符串并将'hello'左对齐，右对齐，居中
+
+`strip() rstrip() lstrip()`删除空白，左空白，右空白
+
+### pyperclip
+
+`pip install pyperclip` 安装第三方模块
+
+pyperclip.copy() pyperclip.paste() 从剪贴板复制，粘贴到剪贴板
+
+
+
+---
+
+$\color{red}{**自动化任务**}$
+
