@@ -198,13 +198,15 @@ fun schedule(sunny: Boolean, day: Day) = when (day) {
 
 ##### for
 
-```ko
+```kotlin
 for (i in 1..10) ...
 for (i : Int in 1..10) ...
 for (i in 1..10 step 2) // 每次+2
 for (i in 10 downTo 1 step 2) //倒序
 for (i in 1 until 10) //不包含10 ->  123456789
 ```
+
+*包含10*
 
 ##### 范围表达式 1..10
 
@@ -296,8 +298,11 @@ class Bird {
 }
 ```
 
-* 除非显示声明延迟初始化,则必须赋初始值
+会自动生成相应的get方法
+
+* 除非显式声明延迟初始化,则必须赋初始值
 * 默认public,而Java中默认包可见
+* 建议使用val,也就是不可变成员属性 *使用var有什么后果?*
 
 #### 接口
 
