@@ -370,6 +370,9 @@ class Bird(weight: Double, age: Int, color: String) {
     val age: Int
     val color: String
     init {
+        // 构造方法参数可以在init块里调用
+        //　也可以直接在声明成员变量时赋值
+        // 但是不能在其他方法内部直接调用
         this.weight = weight
         println("The bird's weight is ${this.weight}.")
         this.age = age
@@ -400,6 +403,8 @@ class Bird(val weight: Double,val age: Int,val color: String){
 
 * 必须是val类型,不能var
 
+* 接受的是一个返回Lazy<T>返回值的lambda表达式
+
 * 首次被调用时赋值,并且后续不能改变.
 
 * 具备同步锁,只能有一个线程访问,线程安全.可以传入如下参数取消单线程限制.
@@ -416,7 +421,10 @@ class Bird(val weight: Double,val age: Int,val color: String){
 
 使用`lateinit`
 
-* 不能用于基本数据类型
+* 不能用于基本数据类型,只能用于包装类,**但是Kotlin的包装类怎么表达?**
+
+  全限定名可以引用到`lateinit var age2 : java.lang.Double`或者使用下面的`Delegates.notNull<T>`
+
 * 只能用于var类型
 
 ```kotlin
@@ -447,6 +455,23 @@ fun xXXXX(){
 
 Kotlin也可以实现多个构造方法,不过分为主从构造,类外面那个`class Bird(....)`为主构造,其他的为从
 
+```kotlin
+class Passer(age: Int){
+    val age : Int
+    init{
+        this.age = age
+    }
+    constructor(birthDay:Date) : this(getAgeByBirth(birthDay))// 这里调用的方法不能调用本类成员方法
+}
+
+fun getAgeByBirth(birthDay: Date): Int {
+    return 0
+}
+
+```
+
+[必须在完全构造的对象上使用成员方法](https://www.codenong.com/38481135/)
+
 从构造必须直接或间接调用主构造
 
 ```kotlin
@@ -475,7 +500,7 @@ class Penguin : Bird {
 }
 ```
 
-* 直接使用 : 代替 extends implements
+* 直接使用 `: `代替 `extends implements`
 * 默认均为final,所以允许被继承的类和成员需要使用open修饰
 
 ### 访问控制
