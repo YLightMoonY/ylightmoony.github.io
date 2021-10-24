@@ -511,39 +511,59 @@ class Penguin : Bird {
 >
 > 对里氏替换原则通俗的理解是:子类可以扩展父类的功能,但不能改变父类原有的功
 > 能。它包含以下4个设计原则:
-> ·子类可以实现父类的抽象方法,但不能覆盖父类的非抽象方法;
-> ·子类可以增加自己特有的方法;
-> ·当子类的方法实现父类的方法时,方法的前置条件(即方法的形参)要比父类方法
-> 的输入参数更宽松;
-> ·当子类的方法实现父类的抽象方法时,方法的后置条件(即方法的返回值)要比父
-> 类更严格。
+>
+> * 子类可以实现父类的抽象方法,但不能覆盖父类的非抽象方法;
+> * 子类可以增加自己特有的方法;
+> * 当子类的方法实现父类的方法时,方法的前置条件(即方法的形参)要比父类方法
+>   的输入参数更宽松;
+> * 当子类的方法实现父类的抽象方法时,方法的后置条件(即方法的返回值)要比父
+>   类更严格。
 
 ##### 默认修饰符 final
 
 ##### sealed
 
-`sealed class Bird` 则可以被继承,但是子类必须和父类在同一个文件中.但是sealed声明的类为抽象类,无法被初始化.
+```kotlin
+sealed class Bird2 {
+    open fun fly() = "I can fly"
+}
+class Passer2 : Bird2() {
+}
+```
 
-##### abstrat 同Java,使用后可以被继承且没有sealed限制
+则可以被继承,但是子类必须和父类在同一个文件中.但是sealed声明的类为抽象类,无法被初始化.
+
+*为何一定要调用父类构造方法?是java的限制吗?*
+
+##### abstrat 
+
+同Java,使用后可以被继承且没有sealed限制
 
 ##### 可见性控制
 
-> 1)Kotlin与Java的默认修饰符不同,Kotlin中是public,而Java中是
-> default。
-> 2)Kotlin中有一个独特的修饰符internal。
-> 3)Kotlin可以在一个文件内单独声明方法及常量,同样支持可见性修饰符。
-> 4)Java中除了内部类可以用private修饰以外,其他类都不允许private修饰,
-> 而Kotlin可以。
-> 5)Kotlin和Java中的protected的访问范围不同,Java中是包、类及子类可访
-> 问,而Kotlin只允许类及子类。
+> 1. Kotlin与Java的默认修饰符不同,Kotlin中是public,而Java中是
+>    default。
+> 2. Kotlin中有一个独特的修饰符internal。
+> 3. Kotlin可以在一个文件内单独声明方法及常量,同样支持可见性修饰符。
+> 4. Java中除了内部类可以用private修饰以外,其他类都不允许private修饰,
+>    而Kotlin可以。
+> 5. **Kotlin和Java中的protected的访问范围不同,Java中是包、类及子类可访
+>    问,而Kotlin只允许类及子类。**
+
+*Java可见性是啥玩意来着*
+
+* private 本类
+* 默认 包内
+* protected 包内+子类
+* public 所有
 
 ###### internal :　模块内访问，
 
-> ·一个Eclipse项目
-> ·一个Intellij IDEA项目
-> ·一个Maven项目
-> ·一个Grandle项目
-> ·一组由一次Ant任务执行编译的代码
+> * 一个Eclipse项目
+> * 一个Intellij IDEA项目
+> * 一个Maven项目
+> * 一个Grandle项目
+> * 一组由一次Ant任务执行编译的代码
 
 部分java类库的类会使用default.只能在包内访问,这时第三方引用的时候只要创建同名包就能访问到这个类,而internal的不会.
 
