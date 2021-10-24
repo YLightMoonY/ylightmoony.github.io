@@ -535,6 +535,8 @@ class Passer2 : Bird2() {
 
 *为何一定要调用父类构造方法?是java的限制吗?*
 
+*-> 子类实例化都会调用父类构造,java中可以省略空的调用,kotlin必须显式声明*
+
 ##### abstrat 
 
 同Java,使用后可以被继承且没有sealed限制
@@ -576,8 +578,6 @@ class Passer2 : Bird2() {
 java 中是包,类,子类. kotlin中没有包作用域,所以只是类,子类
 
 ![Visibility](/assets/KotlinCore/3_visibility.png)
-
-
 
 ### 多继承
 
