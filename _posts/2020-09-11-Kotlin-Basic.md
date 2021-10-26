@@ -320,14 +320,15 @@ interface Flyer {
 
 ```kotlin
 public interface Flyer {
-int getSpeed();
-void kind();
-void fly();
-public static final class DefaultImpls {
-public static void fly(Flyer $this) {
-String var1 = "I can fly";
-System.out.println(var1);
-}
+	int getSpeed();
+	void kind();
+	void fly();
+    public static final class DefaultImpls {
+        public static void fly(Flyer $this) {
+            String var1 = "I can fly";
+            System.out.println(var1);
+        }
+	}
 }
 ```
 
@@ -554,7 +555,7 @@ class Passer2 : Bird2() {
 
 *Java可见性是啥玩意来着*
 
-* private 本类
+* private 本类 **外部类可以访问内部类私有成员**
 * 默认 包内
 * protected 包内+子类
 * public 所有
@@ -614,15 +615,18 @@ fun main(args : Array<String>){
 }
 ```
 
-多继承时通过范型来制定实际调用的是哪个父接口的方法. `super<Flyer>`
+多继承实现接口:
+
+1. 需要实现所有抽象成员方法成员变量.当需要调用同名默认实现方法时,需要重写.
+2. 使用`super<T>.xxx()`这种范型的方式调用相应接口同名方法
+3. 必须使用`override`关键字
 
 ###### getter setter
 
 当定义一个成员变量时,编译器会自动帮忙生成getter setter,不用再生成模板代码.
 
-val因为不可更改,所以只有getter方法(因为实际java实现的val就是一个getter方法)
-
-var会同时又getter setter
+1. val因为不可更改,所以只有getter方法(因为实际java实现的val就是一个getter方法),var会同时又getter setter
+2. private修饰的变量将不会有getset,因为外部不可访问了
 
 #### 内部类多继承
 
