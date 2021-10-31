@@ -800,6 +800,8 @@ fun main(args: Array<String>) {
 
 #### 单例
 
+使用object代替class声明
+
 ```kotlin
 object DatabaseConfig{
     var host : String = "127.0.0.1"
@@ -808,6 +810,8 @@ object DatabaseConfig{
 ```
 
 之后直接用DatabaseConfig调用即可,直接调用的就是一个单例对象,不是类.
+
+得到的是最简单的饿汉式单例模式
 
 #### object表达式
 
@@ -824,6 +828,8 @@ Collections.sort(list, object : Comparator<String>{
         }
     })
 ```
+
+object 匿名内部类可以继承或者实现多个类或接口,而java版只能一个.
 
 当然这种简单的直接用lambda表达式更方便:
 
@@ -846,6 +852,8 @@ Collections.sort(list, comparator)
 ## 代数数据类型和模式匹配
 
 ### 代数数据类型 (Algebraic Data Type,ADT)
+
+> This is a type where we specify the shape of each of the elements
 
 #### 计数
 
