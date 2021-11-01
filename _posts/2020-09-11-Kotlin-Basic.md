@@ -948,9 +948,22 @@ fun logicPattern(a : Int) = when {
 
 #### 嵌套表达式
 
+```kotlin
+fun simplifyExpr(expr: Expr) = when (expr) {
+    is Expr.Num -> expr
+    is Expr.Operate -> when (expr) {
+        Expr.Operate("+",expr.left,Expr.Num(0)) -> expr.left
+        Expr.Operate("+",Expr.Num(0), expr.right) -> expr.right
+        else -> expr
+    }
+}
+```
+
+*直接进行嵌套匹配的时候省略`is`*
+
 *还举了半天scala例子,不懂scala真的看的很困难*
 
-可以考虑使用递归的方式去嵌套
+直接匹配数据结构中每一项的值是否符合条件
 
 ### 增强kotlin模式匹配
 
@@ -970,9 +983,7 @@ expr.left is Expr.Num && expr.left.value == 0
 
 #### 面向对象分解
 
-> 通过在父类中定义一系列的测试方法(比如上面的
-> 测试是否为数值),然后在子类中实现这些方法,就可以在不同的子类中来做相应的操作
-> 了。
+> 通过在父类中定义一系列的测试方法(比如上面的测试是否为数值),然后在子类中实现这些方法,就可以在不同的子类中来做相应操作了。
 
 ```kotlin
 
