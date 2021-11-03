@@ -1102,5 +1102,53 @@ class Visitor {
 > * 样本类(Case Classes)
 > * 抽取器(Extractor)
 
+## 类型系统
+
+#### Null的问题
+
+NullPointerException非常常见.经常需要加入大量的非空判断来解决.Java8通过引入Optional<T>来规避,可是因为使用了范型,导致很高的性能开销.看看kotlin如何解决
+
+### Kotlin 可空类型
+
+kotlin默认的类型声明为不可空,`val a:Long = null` 会在编译器就报错
+
+需要可空时 : `val a:Long? = null` 加个问号
+
+如果是成员变量可空,则引用时也需要加上?
+
+```kotlin
+data class Glass(val degreeOfMyopia: Double)
+data class Student(val glass: Glass?)
+data class Seat(val student: Student?)
+
+fun getDegree(seat: Seat) {
+    println("眼睛度数: ${seat.student?.glass?.degreeOfMyopia}")
+}
+fun main() {
+    val seat = Seat(null)
+    getDegree(seat)
+}
+
+// --> 眼睛度数: null
+```
+
+#### Elvis操作符 `?:`  (又名合并运算符)
+
+指定为空时默认值.
+
+```kotlin
+val degree = student.glass?.degreeOfMyopia?:-1
+```
+
+#### 非空断言 `!!.`
+
+为空时抛出NPE异常
+
+```kotlin
+val degree = student.glass!!.degreeOfMyopia
+```
+
+
+
 
 
