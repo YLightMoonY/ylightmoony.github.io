@@ -1047,11 +1047,60 @@ fun simplifyExpr(expr: Expr): Expr = when {
 
 > 表示一个作用于某对象结构中的各元素的操作,它使你可以在不改变各元素类的前提下定义作用于这些元素的新操作。
 
+核心就是将对成员变量的判断封装到另一个类里面.就像上面要判断'0+x'.属于对象分解的衍生.将需要每个子类都要实现一遍的方法全部整合到一个专门的判断类里.
+
+```kotlin
+sealed class Expr{
+    abstract fun isZero(v:Visitor) : Boolean
+    abstract fun isAddZero(v: Visitor) : Boolean
+    //abstract fun simplifyExpr(v:Visitor) : Expr
+
+    class Num(val value:Int) :Expr(){
+        override fun isZero(v: Visitor): Boolean {
+            return v.matchZero(this)
+        }
+
+        override fun isAddZero(v: Visitor): Boolean {
+            return v.matchAddZero(this)
+        }
+
+//        override fun simplifyExpr(v: Visitor): Expr {
+//            return v.matchSimplifyExpr(this)
+//        }
+
+    }
+
+    class Operate(val name : String,val left:Expr,val right:Expr) : Expr(){
+        override fun isZero(v: Visitor): Boolean = v.matchZero(this)
+
+        override fun isAddZero(v: Visitor): Boolean = v.matchAddZero(this)
+
+//        override fun simplifyExpr(v: Visitor): Expr = v.matchSimplifyExpr(this)
+
+    }
+}
+
+class Visitor {
+    fun matchZero(num: Expr.Num) : Boolean = num.value == 0
+    fun matchZero(operate: Expr.Operate): Boolean = false
+
+    fun matchAddZero(num: Expr.Num): Boolean = false
+    fun matchAddZero(operate: Expr.Operate): Boolean = when(operate){
+        Expr.Operate("+",operate.left,Expr.Num(0)) -> true
+        Expr.Operate("+",Expr.Num(0),operate.right) -> true
+        else -> false
+    }
+}
+
+```
+
+**缺点:** 每个子类都要去定义一遍判断逻辑,后期维护困难.
+
+#### 暂时在Kotlin中还不能实现
+
+> * Typecase
+> * 样本类(Case Classes)
+> * 抽取器(Extractor)
 
 
-> ·Typecase
-> ·样本类(Case Classes)
-> ·抽取器(Extractor)
->
-> 暂时在Kotlin中还不能实现
 
