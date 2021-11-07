@@ -1148,7 +1148,121 @@ val degree = student.glass?.degreeOfMyopia?:-1
 val degree = student.glass!!.degreeOfMyopia
 ```
 
+反编译为java可以看出,kotlin空判断本身是使用`if..else`实现
+
+相较于Java Optional<T>:
+
+* 兼容性更好
+* 性能更好开销更低
+* 语法简洁
+
+#### Either & let
+
+```kotlin
+// 假定是从服务器获得的数据,可能为null
+String food : String? = "meat"
+// let: 当food不为空执行{}里面
+food?.let{
+    // food不为空执行
+    doSomething()
+    
+    // 用it代替food访问其成员
+    ToastUtils.showShort(it)
+}
+```
 
 
 
+#### 类型检查
+
+`is` `!is` 
+
+```kotlin
+if(obj is String){
+    println("obj is String value")
+}
+if(obj !is String){
+    println("Obj isn't a String")
+}
+```
+
+#### 类型转换 Smart Cast
+
+kotlin会自动转换类型
+
+```kotlin
+when(obj){
+    is String -> println(obj.length)
+    !is String -> pringln("not a string")
+}
+```
+
+> 当且仅当Kotlin的编译器确定在类型检查后该变量不会再改变,才会产生Smart Casts
+
+所以使用var声明的变量无法自动转换
+
+```kotlin
+class Kot {
+    var stu:Student? = getStu()
+    fun dealStu() {
+        if (stu != null) {
+            println(stu.glass)
+        }
+    }
+}
+// 编译错误: Kotlin: Smart cast to 'Student' is impossible, because 'stu' is a mutable property that could have been changed by this time
+```
+
+可以将var 改为 val
+
+* 使用let
+
+  ```kotlin
+  class Kot {
+      var stu:Student? = getStu()
+      fun dealStu() {
+          stu?.let{
+              println(it.glass)
+          }
+      }
+  }
+  ```
+
+* 使用`as` 进行强制转换 **下述as部分无法编译**
+
+  ```kotlin
+  class Kot {
+      var stu: Student? = getStu() as Student?
+      fun dealStu() {
+          if(stu != null){
+              println(stu.glass)
+          }
+      }
+  }
+  ```
+
+* 这样倒是可以
+
+  ```kotlin
+  var stu1:Student? = getStu()
+  fun dealStu1() {
+      if (stu1 != null) {
+          println((stu1 as Student).glass)
+      }
+  }
+  ```
+
+### kotlin类型结构
+
+![Visibility](/assets/KotlinCore/4_class.png)
+
+kotlin中`Any`对应Java中的`Object` 
+
+Kotlin视Java中.Object作为参数和返回值时为`平台类型`
+
+#### 平台类型
+
+> 所有Java引用类型在Kotlin中都表现为平台类型。当在Kotlin中处理平台类型的值的时候,它既可以被当作可空类型来处理,也可以被当作非空类型来操作。
+
+#### Any? 所有类型的根类型
 
