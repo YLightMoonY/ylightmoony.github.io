@@ -1288,3 +1288,111 @@ kotlin引入了 Nothing类型作为所有类型的底层.
 
 而Nothing?作为Nothing父类,与null类似,可以直接替换为null
 
+#### 自动拆箱装箱
+
+根据反编译代码来看.kotlin的`Int`等同于Java的`int`,没有进行装箱操作,而`Int?`才会等同于`Integer`
+
+#### 数组
+
+kotlin中不再使用java的方式,而是如下:
+
+```kotlin
+val array = arrayOf() // 声明长度0数组
+val array = arrayOf(a1,a2,a3...an) // 声明并实例化数组
+```
+
+并且,kotlin对基本数据类型做了单独的数组(避免自动装箱带来的开销).
+
+```kotlin
+val array = intArrayOf(1,2,3)
+```
+
+* 数组大小固定,且存放相同类型数据
+* 数组内存连续,性能较高
+
+### 范型
+
+* 编译阶段就能检查集合中的类型
+* 取出集合元素能自动转换类型
+* 能写出更通用的代码
+* 代码可读性提升
+
+#### 定义
+
+同样使用`<T>`之类的就行
+
+```kotlin
+class MyArrayList<T> : ArrayList<T>(){
+    fun find(item: T) : T? {
+        val index = this.indexOf(item)
+        return if (index >= 0) item else null
+    }
+}
+```
+
+*超前: 使用扩展函数+范型*
+
+```kotlin
+fun main() {
+    val array = ArrayList<String>()
+    array.add("123")
+    println(array.find("123"))
+}
+fun <T> ArrayList<T>.find(item : T) : T?{
+    val index = this.indexOf(item)
+    return if(index >= 0) item else null
+}
+```
+
+**Java中在使用带有范型的方法/类时,可以省略范型,而kotlin中不能省**
+
+不过因为Smart Cast, 如果能推倒出范型所代表的实际类型,则可以省略
+
+#### 上界约束
+
+就是范型可以指定为某个类及其子类
+
+```kotlin
+open class Fruit(val weight: Double)
+class Apple(weight:Double) :Fruit(weight)
+class FruitPlate<T : Fruit>(val t : T)
+
+val plate = FruitPlate<Fruit>(Apple(12.2))
+val plate2 = FruitPlate(Apple(12.2)) // 可以推导出是Apple
+```
+
+使用`where`对同一个范型做多个上界约束
+
+```kotlin
+interface Packed{}
+class PackedFruit(weight: Double) : Fruit(weight),Packed
+
+fun<T> cut(t:T) where T:Fruit,T:Packed{
+    println("Can cut")
+}
+
+val fruit = PackedFruit(12.2)
+cut<PackedFruit>(fruit)
+```
+
+### 类型擦除
+
+#### Java中数组不能使用范型
+
+Java中的数组是*协变*的,其在运行时能获取元素类型.`Object[]`是所有数组的父类
+
+```Java
+Fruit[] fruits = new Apple[10]; // 正确
+List<Fruit> fruits2 = new ArrayList<Apple>(); // 错误
+System.out.println(Apple[].getClass());
+// --> class [Ljavat.Apple;
+System.out.println((new ArrayList<Apple>()).getClass());
+// --> class java.util.ArrayList;
+```
+
+而集合不同,`List<Object>`并不是`List<T>`父类
+
+Kotlin可以定义范型数组,不过相对应的,是去了*协变*
+
+#### 为何范型是类型擦除的
+
