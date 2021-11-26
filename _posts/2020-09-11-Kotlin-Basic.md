@@ -85,7 +85,25 @@ for((index,value) in array.withIndex()) ...
 
 ##### 中缀表达式
 
-`1 to "one"` 返回一个<1,"one">
+`1 to "one"` 返回一个<1,"one">`
+
+#### 数组
+
+kotlin中不再使用java的方式,而是如下:
+
+```kotlin
+val array = arrayOf() // 声明长度0数组
+val array = arrayOf(a1,a2,a3...an) // 声明并实例化数组
+```
+
+并且,kotlin对基本数据类型做了单独的数组(避免自动装箱带来的开销).
+
+```kotlin
+val array = intArrayOf(1,2,3)
+```
+
+* 数组大小固定,且存放相同类型数据
+* 数组内存连续,性能较高
 
 #### 函数返回类型
 
@@ -1299,25 +1317,7 @@ kotlin引入了 Nothing类型作为所有类型的底层.
 
 #### 自动拆箱装箱
 
-根据反编译代码来看.kotlin的`Int`等同于Java的`int`,没有进行装箱操作,而`Int?`才会等同于`Integer`
-
-#### 数组
-
-kotlin中不再使用java的方式,而是如下:
-
-```kotlin
-val array = arrayOf() // 声明长度0数组
-val array = arrayOf(a1,a2,a3...an) // 声明并实例化数组
-```
-
-并且,kotlin对基本数据类型做了单独的数组(避免自动装箱带来的开销).
-
-```kotlin
-val array = intArrayOf(1,2,3)
-```
-
-* 数组大小固定,且存放相同类型数据
-* 数组内存连续,性能较高
+根据反编译代码来看.kotlin的`Int`等同于Java的`int`,没有进行装箱操作,而`Int?`才会等同于`Integer
 
 ### 范型
 
@@ -1404,4 +1404,143 @@ System.out.println((new ArrayList<Apple>()).getClass());
 Kotlin可以定义范型数组,不过相对应的,是去了*协变*
 
 #### 为何范型是类型擦除的
+
+为了兼容老版本代码.
+
+范型是在版本编译时检查.
+
+有没有范型的代码在编译后的字节码完全一致.
+
+![geneirc](/assets/KotlinCore/6_generic.png)
+
+#### 范型的保存
+
+实际还是在类型常量池中保存有范型类型
+
+通过你匿名内部类的方式能拿到范型信息.
+
+创建一个能直接获取到范型类型的类:
+
+```kotlin
+private open class GenericsToken<T>{
+    var type: Type = Any::class.java
+    init {
+        val superClass = this.javaClass.genericSuperclass
+        type = (superClass as ParameterizedType).actualTypeArguments[0]
+    }
+}
+
+fun main() {
+    val gt = object : GenericsToken<Map<String, String>>() {
+
+    }
+    println(gt.type)
+}
+```
+
+### 打破范型不变
+
+#### 协变out
+
+kotlin支持out关键字
+
+```kotlin
+public interface List<out E> : Collection<E> {
+```
+
+那么就可以打破不变性
+
+```kotlin
+val fruits1: List<Fruit> = ArrayList<Fruit>()
+```
+
+代价就是不能再改变集合中的元素.
+
+范型的意义就是确保类型安全,当允许范型协变时,就无法规避复杂继承关系的范型子类之间,取出元素无法保证是对应的子类.
+
+所以在增加关键字`out`时`List`本身协变,就直接没有定义add,remove等一系列改变元素的方法.
+
+而用本身不变的ArrayList来确保类型安全.
+
+
+
+同样,打破不变性同时,协变范型类的方法参数不能再使用范型`E`,除非增加`@UnsafeVariance`注解.
+
+不过返回值可以使用范型`E`
+
+```kotlin
+public interface List<out E> : Collection<E> {
+    public interface List<out E> : Collection<E> {
+        public fun indexOf(element: @UnsafeVariance E): Int
+    }
+    public operator fun get(index: Int): E
+}
+```
+
+#### 逆变in
+
+A 是 B的子类,Generic<B> 是Generic<A>的子类
+
+比如 Comparator
+
+```kotlin
+    val comp = Comparator<Number>() { 
+        n1,n2 -> n1.toDouble().compareTo(n2.toDouble())
+    }
+    val doubleList = mutableListOf<Double>(2.0,3.0)
+    doubleList.sortWith(comp)
+    
+    val intList = mutableListOf<Int>(1,2)
+    intList.sortWith(comp)
+
+
+// -------
+public fun <T> MutableList<T>.sortWith(comparator: Comparator<in T>): kotlin.Unit {}
+```
+
+与out对应,参数类型可以使用范型T,返回值不行
+
+#### *不变 逆变 协变* 统称 *型变*
+
+in out具体使用:
+
+```kotlin
+fun <T> copyIn(dest: Array<in T>, src: Array<T>) {
+    if (dest.size < src.size) {
+        throw IndexOutOfBoundsException()
+    } else {
+        for (i in 0..src.size) {
+            dest[i] = src[i]
+        }
+    }
+}
+
+fun <T> copyOut(dest: Array<T>, src: Array<out T>) {
+    if (dest.size < src.size) {
+        throw IndexOutOfBoundsException()
+    } else {
+        for (i in 0..src.size) {
+            dest[i] = src[i]
+        }
+    }
+}
+
+var dest = arrayOfNulls<Number>(3)
+var src = arrayOf<Double>(1.0,2.0,3.0)
+
+fun test(){
+    copyIn(dest,src)
+    copyOut(dest,src)
+}
+```
+
+copyIn : 由src决定,dest可以使用Double的父类
+
+copyOut: 由dest决定,src可以使用Number的子类
+
+![Generic in out](/assets/KotlinCore/7_generic_inout.png)
+
+*在Java的经历中没有定义过范型所以感触不深*
+
+## Lambda & 集合
 
