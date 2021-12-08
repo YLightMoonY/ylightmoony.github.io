@@ -8,8 +8,6 @@ typora-root-url: ../
 
 [TOC]
 
-
-
 ## 认识Kotlin
 
 #### Kotlin Scala Java
@@ -19,8 +17,6 @@ typora-root-url: ../
 Scala 主要是面向对象的优化以及函数式编程的支持,导致语法复杂化.
 
 Kotlin 主要目的在于Java的优化.虽然新版本Java也实现了很多新的语法特性,但是Android不支持,所以Kotlin成了一个更好的选择
-
-
 
 ## 基本语法
 
@@ -56,6 +52,40 @@ val也可以仅声明,然后后续使用前再赋值.不过这样写声明时一
 val i : Int
 i = 1
 ```
+
+#### 字符串
+
+`"aaa" +１` 正确
+
+`1 + "aaa"` 错误
+
+其他的和java一致
+
+##### 原生字符串
+
+```kotlin
+val rawString = """
+ \n Kotlin is awesome.
+ \n Kotlin is a better Java."""
+
+print(rawString)
+
+\n Kotlin is awesome.
+\n Kotlin is a better Java.
+```
+
+也就是不会进行转义,也不用手动加\n等
+
+```kotlin
+fun message(name: String, lang: String) = "Hi ${name}, welcome to ${lang}!"
+"Kotlin has ${if ("Kotlin".length > 0) "Kotlin".length else "no"} letters."
+```
+
+不止可以直接引用变量,还能插入代码
+
+##### 判断
+
+== 用来判断内容是否一致, === 用来判断引用是否一致, !== 与===相反
 
 #### 循环
 
@@ -105,6 +135,8 @@ val array = intArrayOf(1,2,3)
 * 数组大小固定,且存放相同类型数据
 * 数组内存连续,性能较高
 
+*是不是没有直接声明一个大小n的数组了*
+
 #### 函数返回类型
 
 ```kotlin
@@ -129,7 +161,7 @@ test: (Country) -> Boolean): List<Country> // 增加了一个函数类型的参�
     val res = mutableListOf<Country>()
     for (c in countries) {
         if (test(c)) { // 直接调用test来进行筛选
-        	res.add(c)
+            res.add(c)
         }
     }
     return res
@@ -146,7 +178,7 @@ test就是一个函数类型变量
 (errCode: Int, errMsg: String) -> Unit
 ```
 
-那么实际调用时可以通过`::`引用函数
+那么实际调用时可以通过`::`引用函数 *不懂*
 
 ```kotlin
 filterCountries(countries,A::isBigEuropeanCountry)
@@ -158,7 +190,7 @@ filterCountries(countries,A::isBigEuropeanCountry)
 
 ```kotlin
 countryApp.filterCountries(countries, fun(country: Country): Boolean {
-	return country.continient == "EU" && country.population > 10000
+    return country.continient == "EU" && country.population > 10000
 })
 ```
 
@@ -197,9 +229,9 @@ enum class DayOfWeek(val day : Int){
     SAT(6),
     SUN(7)
     ; // 如果以下有额外的方法或属性定义,则必须强制加上分号
-    
+
     fun getDayNumber(): Int {
-   		return day
+           return day
     }
 }
 ```
@@ -211,16 +243,16 @@ enum class DayOfWeek(val day : Int){
 ```kotlin
 fun schedule(day: Day, sunny: Boolean) = {
     if (day == Day.SAT) {
-    	basketball()
+        basketball()
     } else if (day == Day.SUN) {
-    	fishing()
+        fishing()
     } else if (day == Day.FRI) {
-    	appointment()
+        appointment()
     } else {
         if (sunny) {
-        	library()
+            library()
         } else {
-        	study()
+            study()
         }
     }
 }
@@ -240,8 +272,6 @@ fun schedule(sunny: Boolean, day: Day) = when (day) {
 }
 ```
 
-
-
 ##### 可变参数函数
 
 用varargs定义参数则参数数量可变,类似java中的`...`不过没有任何位置限制
@@ -260,44 +290,6 @@ fun printLetters(vararg letters: String, count : Int){
 
 * 直接输入多个参数,对应的非可变参数要写明`count=3`
 * 用*引用数组
-
-#### 字符串
-
-`"aaa" +１`　正确
-
-`1 + "aaa"` 错误
-
-其他的和java一致
-
-##### 原生字符串
-
-```kotlin
-val rawString = """
- \n Kotlin is awesome.
- \n Kotlin is a better Java."""
-
-print(rawString)
-
-\n Kotlin is awesome.
-\n Kotlin is a better Java.
-```
-
-也就是不会进行转义,也不用手动加\n等
-
-
-
-```kotlin
-fun message(name: String, lang: String) = "Hi ${name}, welcome to ${lang}!"
-"Kotlin has ${if ("Kotlin".length > 0) "Kotlin".length else "no"} letters."
-```
-
-不止可以直接引用变量,还能插入代码
-
-
-
-##### 判断
-
-== 用来判断内容是否一致, === 用来判断引用是否一致, !== 与===相反
 
 
 
@@ -338,15 +330,15 @@ interface Flyer {
 
 ```kotlin
 public interface Flyer {
-	int getSpeed();
-	void kind();
-	void fly();
+    int getSpeed();
+    void kind();
+    void fly();
     public static final class DefaultImpls {
         public static void fly(Flyer $this) {
             String var1 = "I can fly";
             System.out.println(var1);
         }
-	}
+    }
 }
 ```
 
@@ -359,7 +351,6 @@ interface Flyer {
 val height
 get() = 1000
 }
-
 ```
 
 #### 对象
@@ -419,6 +410,8 @@ class Bird(weight: Double, age: Int, color: String) {
 
 > 即它可以不用在类对象初始化的时候就必须有值
 
+*可以省一点内存资源?*
+
 ```kotlin
 class Bird(val weight: Double,val age: Int,val color: String){
     val sex : String by lazy {
@@ -434,7 +427,7 @@ class Bird(val weight: Double,val age: Int,val color: String){
 * 接受的是一个返回Lazy<T>返回值的lambda表达式
 
 * 具备同步锁,只能有一个线程访问,线程安全.可以传入如下参数取消单线程限制.
-
+  
   ```kotlin
   val sex: String by lazy(LazyThreadSafetyMode.PUBLICATION){
       if(color == "yellow") "male" else "female"
@@ -448,7 +441,7 @@ class Bird(val weight: Double,val age: Int,val color: String){
 使用`lateinit`
 
 * 不能用于基本数据类型,只能用于包装类,**但是Kotlin的包装类怎么表达?**
-
+  
   全限定名可以引用到`lateinit var age2 : java.lang.Double`或者使用下面的`Delegates.notNull<T>`
 
 * 只能用于var类型
@@ -493,14 +486,13 @@ class Passer(age: Int){
 fun getAgeByBirth(birthDay: Date): Int {
     return 0
 }
-
 ```
 
 *因为不了解工厂模式对这个感知不深*
 
 [必须在完全构造的对象上使用成员方法](https://www.codenong.com/38481135/)
 
-从构造必须直接或间接调用主构造
+从构造必须直接或间接调用主构造 **不能在函数体内部调用,必须使用`:`这种方式**
 
 ```kotlin
 class MyView : View {
@@ -536,10 +528,10 @@ class Penguin : Bird {
 *子类应该尽量避免重写父类的非抽象方法*
 
 > 里氏替换原则
->
+> 
 > 对里氏替换原则通俗的理解是:子类可以扩展父类的功能,但不能改变父类原有的功
 > 能。它包含以下4个设计原则:
->
+> 
 > * 子类可以实现父类的抽象方法,但不能覆盖父类的非抽象方法;
 > * 子类可以增加自己特有的方法;
 > * 当子类的方法实现父类的方法时,方法的前置条件(即方法的形参)要比父类方法
@@ -563,7 +555,7 @@ class Passer2 : Bird2() {
 
 *-> 子类实例化都会调用父类构造,java中可以省略空的调用,kotlin必须显式声明*
 
-##### abstrat 
+##### abstrat
 
 同Java,使用后可以被继承且没有sealed限制
 
@@ -669,8 +661,6 @@ kotlin 中需要用inner class声明一个内部类,此时才可以直接引用�
 
 如果不声明inner,则默认是一个static内部类(嵌套类),不能引用外部类非static属性.
 
-
-
 使用内部类多继承就是用组合代替封装.
 
 使用private修饰类声明,确保封闭性
@@ -729,7 +719,7 @@ componentN的意义
 
 可以将类属性一次性绑定到变量上
 
-``` kotlin
+```kotlin
 varl b1 = Bird(10.0,1."blue")
 val (weight,age,color) = b1
 ```
@@ -750,10 +740,10 @@ val (weight,age,color) = "10.0,1,blue".split(",")
 data class Bird(var weight: Double, var age: Int, var color: String) {
     var sex = 1
     operator fun component4(): Int { //operator关键字
-    	return this.sex
+        return this.sex
     }
     constructor(weight: Double, age: Int, color: String, sex: Int) : this(weight, age, color) {
-    	this.sex = sex
+        this.sex = sex
     }
 }
 ```
@@ -768,11 +758,11 @@ val (weightT, ageT, colorT) = Triple(20.0, 1, "blue")
 #### 约定和使用
 
 > * 数据类必须拥有一个构造方法,该方法至少包含一个参数,一个没有数据的数据类是没有任何用处的;
->
+> 
 > * 与普通的类不同,数据类构造方法的参数强制使用var或者val进行声明;
->
+> 
 > * data class之前不能用abstract、open、sealed或者inner进行修饰; -> 不可抽象,被继承,不能在类内部定义非嵌套数据类,
->
+>   
 >   *那使用static是否可以?* -> kotlin没有static关键字.不过直接可以直接在类内部定义数据类本身就是嵌套的,static的.放在`companion object`里也可以
 
 ### object
@@ -802,7 +792,7 @@ fun main() {
 
 ```kotlin
 class Prize private constructor(val name: String, val count: Int, val type: Int) {
-	companion object {
+    companion object {
         val TYPE_COMMON = 1
         val TYPE_REDPACK = 2
         val TYPE_COUPON = 3
@@ -817,7 +807,6 @@ fun main(args: Array<String>) {
     val couponPrize = Prize.newCouponPrize("十元代金券", 10)
     val commonPrize = Prize.defaultCommonPrize()
 }
-
 ```
 
 #### 单例
@@ -858,18 +847,15 @@ object 匿名内部类可以继承或者实现多个类或接口,而java版只�
 ```kotlin
 val comparator = Comparator<String> { s1, s2 ->
     if (s1 == null)
-    	return@Comparator -1 //我们已经在第2章中接触过这种语法了
+        return@Comparator -1 //我们已经在第2章中接触过这种语法了
     else if (s2 == null)
-    	return@Comparator 1
+        return@Comparator 1
     s1.compareTo(s2)
 }
 Collections.sort(list, comparator)
-
 ```
 
 *前面说的那么点根本没高明白lambda到底怎么用的,太乱了*
-
-
 
 ## 代数数据类型和模式匹配
 
@@ -1060,7 +1046,6 @@ fun simplifyExpr(expr: Expr): Expr = when {
     expr.isAddZero() && expr.right().isAddZero() && expr.right().left().isZero() -> expr.right().right()
     else -> expr
 }
-
 ```
 
 * 优势:　简单结构的数据极大精简语法
@@ -1116,7 +1101,6 @@ class Visitor {
         else -> false
     }
 }
-
 ```
 
 **缺点:** 每个子类都要去定义一遍判断逻辑,后期维护困难.
@@ -1192,13 +1176,11 @@ String food : String? = "meat"
 food?.let{
     // food不为空执行
     doSomething()
-    
+
     // 用it代替food访问其成员
     ToastUtils.showShort(it)
 }
 ```
-
-
 
 #### 类型检查
 
@@ -1243,7 +1225,7 @@ class Kot {
 可以将var 改为 val
 
 * 使用let
-
+  
   ```kotlin
   class Kot {
       var stu:Student? = getStu()
@@ -1256,7 +1238,7 @@ class Kot {
   ```
 
 * 使用`as` 进行强制转换 **下述as部分无法编译**
-
+  
   ```kotlin
   class Kot {
       var stu: Student? = getStu() as Student?
@@ -1269,7 +1251,7 @@ class Kot {
   ```
 
 * 这样倒是可以
-
+  
   ```kotlin
   var stu1:Student? = getStu()
   fun dealStu1() {
@@ -1294,14 +1276,12 @@ Kotlin视Java中.Object作为参数和返回值时为`平台类型`
 #### `Any?` 所有类型的根类型
 
 > 如果你只有Java这门编程语言的开发经验,很容易陷入一个误区:继承关系决定父子类型关系。因为在Java中,类与类型大部分情况下都是“等价”的(在Java泛型出现前)。
->
+> 
 > 事实上,“继承”和“子类型化”是两个完全不同的概念。子类型化的核心是一种类型的替代关系
->
+> 
 > 作为比较,继承强调的是一种“实现上的复用”,而子类型化是一种类型语义的关系,与实现没关系。部分语言如Java,由于在声明父子类型关系的同时也声明了继承的关系,所以造成了某种程度上的混淆。
->
+> 
 > 因此,我们可以很大胆地说,Any?是Any的父类型,而且是所有类型的根类型,虽然当前的Kotlin官网文档没有介绍过这一点。
-
-
 
 #### Noting与Noting?
 
@@ -1462,8 +1442,6 @@ val fruits1: List<Fruit> = ArrayList<Fruit>()
 
 而用本身不变的ArrayList来确保类型安全.
 
-
-
 同样,打破不变性同时,协变范型类的方法参数不能再使用范型`E`,除非增加`@UnsafeVariance`注解.
 
 不过返回值可以使用范型`E`
@@ -1489,7 +1467,7 @@ A 是 B的子类,Generic<B> 是Generic<A>的子类
     }
     val doubleList = mutableListOf<Double>(2.0,3.0)
     doubleList.sortWith(comp)
-    
+
     val intList = mutableListOf<Int>(1,2)
     intList.sortWith(comp)
 
@@ -1544,3 +1522,4 @@ copyOut: 由dest决定,src可以使用Number的子类
 
 ## Lambda & 集合
 
+极度简化语法
